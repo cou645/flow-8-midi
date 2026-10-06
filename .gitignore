@@ -3,3 +3,4 @@ target/
 *.pdb
 captures/
 __pycache__/
+docs/QSG_FLOW-8_official.pdf
