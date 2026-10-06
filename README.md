@@ -28,7 +28,7 @@ Connect the FLOW 8 by USB and start the app. Bluetooth is used automatically to 
 
 | | |
 |---|---|
-| **Mixer** — levels, mute/solo, gain, comp, low cut, 48V | **Routing** *(new in 2.0)* — USB, phones, monitor, BT/USB, FX returns, preferences |
+| **Mixer** — levels, mute/solo, gain, comp, low cut, 48V, live meters, PHONES slider | **Routing** *(new in 2.0)* — USB, phones, monitor, BT/USB, FX returns, preferences |
 | <img alt="Mixer" src="./resources/screenshots/Flow-8-Mixer.png" width="100%"> | <img alt="Routing" src="./resources/screenshots/Flow-8-Routing.png" width="100%"> |
 | **EQ** — 4-band per channel, 9-band + limiter per bus | **Sends** — Monitor 1/2 and FX 1/2 per channel |
 | <img alt="EQ" src="./resources/screenshots/Flow-8-EQ.png" width="100%"> | <img alt="Sends" src="./resources/screenshots/Flow-8-Sends.png" width="100%"> |
