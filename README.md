@@ -4,54 +4,24 @@
 
 # FLOW 8 MIDI Controller
 
-A simple non-official cross-platform desktop MIDI controller for the [Behringer FLOW 8 mixer](https://www.behringer.com/behringer/product?modelCode=0603-AEW).
-
-Made with 🦀 [Rust](https://www.rust-lang.org/), 🧊 [iced](https://iced.rs/), 🎹 [midir](https://github.com/Boddlnagg/midir) and 📡 [btleplug](https://github.com/deviceplug/btleplug).
+Unofficial desktop controller for the [Behringer FLOW 8](https://www.behringer.com/behringer/product?modelCode=0603-AEW) mixer — Linux, Windows and macOS.
 
 <img alt="FLOW 8 MIDI Controller — Mixer+ view" src="./resources/screenshots/Flow-8-Big-Mixer.png" width="100%">
 
 </div>
 
-## About
-
-* **Repository**: [github.com/cou645/flow-8-midi](https://github.com/cou645/flow-8-midi)
-* **Original Repository**: [github.com/abelroes/flow-8-midi](https://github.com/abelroes/flow-8-midi) by Abel Rocha Espinosa
-
-## Credits
-
-* **Original project and author**: [Abel Rocha Espinosa](https://github.com/abelroes/flow-8-midi).
-* **Fork (v2.0)**: directed and tested on hardware by stemsee.
-* **AI disclosure**: the v2.0 additions — code (Routing tab, PHONES readout, BLE settings/routing support), protocol research, developer tools, documentation and README text — were written with **Claude Opus 5.5 (Anthropic) via Claude Code**. No images or video in this version are AI-generated.
-
-## What's new in this fork
-
-* **Routing tab**: mixer settings that were only reachable from the FLOW phone app, read from the mixer when Bluetooth connects:
-  * USB output: Recording / Streaming
-  * Phones: source (Main / Mon 1/2) and Pre / Post
-  * Monitor 1/2: Pre / Post and stereo link
-  * BT/USB play: to main mix / phones only
-  * From PC (USB): to channel / Mon out 1/2
-  * FX1 / FX2 returns: to Main, Mon 1, Mon 2
-  * Preferences: foot switch mode, −10 dBV Main / Monitor out pads, mixer app link
-* **PHONES level readout** in the top bar, following the hardware knob (read-only — no remote command for it is known).
-* **Protocol research** ([notes](./docs/flow8-midi-implementation.md)): BLE settings get/set (`0x25`/`0x26`), FX return routing (`0x11`), app tap tempo (`0x40`); warnings about commands that change many levels at once.
-* **Developer tools** (`tools/`, Linux/BlueZ): BLE pass-through logger, Android btsnoop HCI log decoder, SysEx dump diff watcher.
-
 ## Download
 
-Pre-built binaries for **Linux** (x86\_64), **Windows** (x86\_64), and **macOS** (Apple Silicon) are available on the [Releases page](https://github.com/cou645/flow-8-midi/releases).
+Get the latest build from the [Releases page](https://github.com/cou645/flow-8-midi/releases).
+
+Connect the FLOW 8 by USB and start the app. Bluetooth is used automatically to read the mixer's state and for the Routing tab.
 
 ## Features
 
-* **Mixer page**: Level, Mute, Solo, Gain, Pan, Compressor, Low Cut, and 48V Phantom Power per channel. Bus Level, Pan, and Limiter for Main and Monitor buses.
-* **EQ page**: 4-band EQ per channel and 9-band EQ with Limiter per bus (Main, Monitor 1, Monitor 2).
-* **Sends page**: Send levels to Monitor 1, Monitor 2, FX 1, and FX 2 per channel.
-* **FX page**: FX preset selection (1-16), Parameter 1 and Parameter 2 controls for both FX slots, plus FX bus return levels.
-* **Snapshots page**: Load any of the 15 mixer snapshots or reset to factory defaults.
-* **Settings page**: Theme selection, sync interval configuration, and debug log viewer.
-* **BLE sync**: When connected via Bluetooth, reads the mixer's full state (all parameters, channel names, snapshot names) and reflects it in the UI.
-* **Auto-detection**: Automatically detects the FLOW 8 on startup via USB MIDI.
-* **Cross-platform**: Works on Windows, Linux, and macOS.
+* Mixer, EQ, Sends, FX and Snapshots pages — every control in the FLOW 8 MIDI implementation.
+* **Routing tab** (new in 2.0): USB recording/streaming, phones source and pre/post, monitor pre/post and stereo link, BT/USB play, USB return routing, FX return routing, foot switch mode and output pads — previously only in the phone app.
+* PHONES level readout (new in 2.0).
+* Live sync from the mixer over Bluetooth.
 
 ## Screenshots
 
@@ -64,93 +34,32 @@ Pre-built binaries for **Linux** (x86\_64), **Windows** (x86\_64), and **macOS**
 | **FX** — presets, parameters, FX mute, tap tempo | **Snapshots** — load any of the 15 snapshots |
 | <img alt="FX" src="./resources/screenshots/Flow-8-FX.png" width="100%"> | <img alt="Snapshots" src="./resources/screenshots/Flow-8-Snapshots.png" width="100%"> |
 
-## How to Use
+## Building
 
-1. Download the FLOW 8 MIDI Controller.
-2. Connect your FLOW 8 device via USB and power it on.
-3. Open the application — the FLOW 8 is detected and connected automatically.
-4. Use the page tabs (Mixer, EQ, Sends, FX, Snapshots) to control all mixer parameters.
-5. **(Optional)** Connect via Bluetooth to sync the mixer's current state to the UI (see [User Manual](./docs/MANUAL.md#10-bluetooth-ble-sync)).
-
-## 🍺 Support the Project
-
-If you find this useful, consider [buying me a beer](https://www.buymeacoffee.com/stemsee) — it keeps the project alive!
-
-<a href="https://www.buymeacoffee.com/stemsee" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/default-orange.png" alt="Buy Me A Coffee" height="41" width="174"></a>
-
-## Documentation
-
-* **[User Manual](./docs/MANUAL.md)** — Setup, UI pages, BLE sync, and how everything works.
-* **[FAQ — Troubleshooting](./docs/MANUAL.md#11-faq--troubleshooting)** — Common issues with Bluetooth, USB, snapshots, and more.
-* **[Developer Manual](./docs/DEV_MANUAL.md)** — Dev-tools, calibration workflow, and CLI tools.
-* **[MIDI Implementation Research](./docs/flow8-midi-implementation.md)** — Protocol reverse-engineering details.
-
-## Building from source
-
-### Prerequisites
-
-* [Rust](https://www.rust-lang.org/tools/install) 1.85 or later
-
-#### Linux
-
-Install the required system dependencies:
-
-```bash
-# Debian/Ubuntu
-sudo apt install libasound2-dev pkg-config libxkbcommon-dev libwayland-dev libdbus-1-dev
-
-# Fedora
-sudo dnf install alsa-lib-devel pkgconfig libxkbcommon-devel wayland-devel dbus-devel
-
-# Arch
-sudo pacman -S alsa-lib pkgconf libxkbcommon wayland dbus
-```
-
-### Build & Run
+Requires [Rust](https://www.rust-lang.org/tools/install) 1.85+. On Debian/Ubuntu: `sudo apt install libasound2-dev pkg-config libxkbcommon-dev libwayland-dev libdbus-1-dev`, then:
 
 ```bash
 cargo run --release
 ```
 
-### Lint
+More in the [User Manual](./docs/MANUAL.md), [Developer Manual](./docs/DEV_MANUAL.md) and [protocol notes](./docs/flow8-midi-implementation.md).
 
-```bash
-cargo clippy --release -- -D warnings
-```
+## Credits
 
-### Cross-compilation
+* Original project: [abelroes/flow-8-midi](https://github.com/abelroes/flow-8-midi) by Abel Rocha Espinosa.
+* Version 2.0: directed and hardware-tested by stemsee.
+* **AI disclosure**: the 2.0 code, protocol research, tools, documentation and README text were written with Claude Opus 5.5 (Anthropic) via Claude Code. No images or video are AI-generated.
 
-```bash
-cargo build --release --target x86_64-unknown-linux-gnu
-cargo build --release --target x86_64-pc-windows-gnu
-cargo build --release --target aarch64-apple-darwin
-```
+If you find this useful, consider [buying me a beer](https://www.buymeacoffee.com/stemsee).
 
-The binary is output to `target/<target>/release/`.
-
-### Creating a release
-
-Push a version tag to trigger automated builds for all platforms via GitHub Actions:
-
-```bash
-git tag v2.0.0
-git push origin v2.0.0
-```
-
-This creates a GitHub Release with binaries for Linux, Windows, and macOS attached automatically.
-
-## Backlog
-
-* **SysEx over BLE**: When Bluetooth is connected, send SysEx parameter changes instead of CC messages for higher precision (eliminates CC↔dB approximation loss).
-* **Bidirectional sync via BLE**: Reflect physical mixer changes (faders, knobs) in the UI in real time using the BLE state stream.
-* **Channel name editing via BLE**: Reverse-engineer the BLE command for writing channel names (possibly via Type 0x06 with an unknown parameter ID, or a new packet type). Currently names are read-only from SysEx dumps.
+<a href="https://www.buymeacoffee.com/stemsee" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/default-orange.png" alt="Buy Me A Coffee" height="41" width="174"></a>
 
 ## Disclaimers
 
 * This application is not official. Any damage (to the unit or any peripherals), misuse or act that avoids warranty is not our responsibility. Use it at your own risk.
 * When connected via BLE, the application periodically syncs state from the mixer via SysEx dumps. However, real-time bidirectional sync (reflecting physical fader changes instantly) is not yet supported.
 * On Windows, fetching snapshot names via BLE may fail due to a platform-level BLE subscribe limitation (`"The attribute cannot be written."`). Snapshots still load correctly — only the names are unavailable, so all slots will appear unnamed.
-* Current and future implementations are limited by the [FLOW 8 MIDI Implementation](https://mediadl.musictribe.com/media/PLM/data/docs/P0DNM/QSG_BE_0603-AEW_FLOW-8_WW.pdf#page=23).
+* Current and future implementations are limited by the FLOW 8 MIDI Implementation (Behringer's FLOW 8 Quick Start Guide).
 * Later, I found [another solution](https://hexler.net/touchosc) for custom control of this unit. Give it a try and use what is best for you!
 
 ## License
