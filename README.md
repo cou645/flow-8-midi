@@ -6,7 +6,7 @@
 
 Unofficial desktop controller for the [Behringer FLOW 8](https://www.behringer.com/behringer/product?modelCode=0603-AEW) mixer — Linux, Windows and macOS.
 
-<img alt="FLOW 8 MIDI Controller — Mixer+ view" src="./resources/screenshots/Flow-8-Big-Mixer.png" width="100%">
+<img alt="FLOW 8 MIDI Controller — Mixer+ view" src="./resources/screenshots/Flow-8-Big-Mixer-meters.png" width="100%">
 
 </div>
 
