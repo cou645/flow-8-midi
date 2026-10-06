@@ -61,7 +61,7 @@ FLOW 8 MIDI Controller is a desktop application that lets you control your Behri
   BT/USB play destination, USB return routing, FX return routing, foot switch mode, −10 dBV output pads and mixer app
   link. Values are read from the mixer when Bluetooth connects; a highlighted button is the mixer's current setting.
 * **PHONES slider** in the top bar — drag and release to set the headphone level; it follows the hardware knob.
-* **Live input meters** — a thin bar beside each channel fader (two for stereo strips).
+* **Live meters** — a thin bar beside each channel fader (two for stereo strips) and a L/R pair beside the Main fader.
 
 **What it does NOT do:**
 
@@ -318,6 +318,19 @@ Click the **Sync** button in the navigation bar to request an immediate state up
 **Q: Snapshot names don't appear on Windows — all slots look the same.**
 
 A: This is a known Windows limitation. The BLE subscribe required to fetch snapshot names fails on some Windows systems with the error `"The attribute cannot be written."`. Snapshots themselves work fine — you can still load them by slot number. Only the names are unavailable. There is no workaround at this time; this appears to be a platform-level BLE issue.
+
+***
+
+**Q: No sound from the PC through the FLOW 8.**
+
+A: Check each step of the path — the app's meters show where the audio stops:
+
+1. **On the mixer (Routing tab, needs Bluetooth):** *From PC (USB) → USB left* must be **To channel** (Off = PC audio goes nowhere), and *BT/USB play* must be **To main mix** to hear it on the speakers (*Phones only* sends it to the headphone socket only).
+2. **On the PC:** send the app's audio to the FLOW 8. On Linux the FLOW 8 appears as a **4-channel** output (USB 1/2 = "USB left", USB 3/4 = "USB right"); stereo audio plays on USB 1/2. Some media apps (and mpv-based players) pick their own output device — choose the FLOW 8 there.
+3. **Watch the meters:** if the **USB/BT** bars move, the audio reaches the mixer. If **Main** moves but the speakers are silent, check the speaker cables and speakers. If USB/BT moves but Main doesn't, it's routing (step 1) or a **solo** — a soloed channel changes what the headphones hear; un-solo it with the **S** button.
+4. Still nothing: power-cycle the mixer (keeps settings and snapshots). A factory reset also resets Routing, so set it again afterwards.
+
+> **Linux / PulseAudio note:** changing the *system default* output to the FLOW 8 while echo-cancel/loopback modules are running crashed PulseAudio 17 once during testing. Moving a single app to the FLOW 8 (e.g. in pavucontrol's Playback tab) worked reliably.
 
 ***
 

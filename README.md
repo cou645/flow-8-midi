@@ -21,7 +21,7 @@ Connect the FLOW 8 by USB and start the app. Bluetooth is used automatically to 
 * Mixer, EQ, Sends, FX and Snapshots pages — every control in the FLOW 8 MIDI implementation.
 * **Routing tab** (new in 2.0): USB recording/streaming, phones source and pre/post, monitor pre/post and stereo link, BT/USB play, USB return routing, FX return routing, foot switch mode and output pads — previously only in the phone app.
 * **PHONES level slider** in the top bar — set the headphone level from the PC (new in 2.1).
-* **Live input meters** on every channel strip (new in 2.1).
+* **Live meters** on every input strip and on Main (new in 2.1).
 * Sync from the mixer over Bluetooth; settings changed in the mixer's menu show up instantly.
 
 ## Screenshots
