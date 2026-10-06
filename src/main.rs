@@ -161,6 +161,8 @@ fn start_ble_connection(controller: &mut FLOW8Controller) {
     let (status_tx, status_rx) = std::sync::mpsc::channel();
     let (snapshot_tx, snapshot_rx) = std::sync::mpsc::channel();
     let (settings_tx, settings_rx) = std::sync::mpsc::channel();
+    let (meters_tx, meters_rx) = std::sync::mpsc::channel();
+    controller.meters_receiver = Some(meters_rx);
     controller.settings_receiver = Some(settings_rx);
     controller.ble_status_receiver = Some(status_rx);
     controller.snapshot_names_receiver = Some(snapshot_rx);
@@ -176,13 +178,16 @@ fn start_ble_connection(controller: &mut FLOW8Controller) {
             // Subscribe to BLE notifications so any SysEx dump the FLOW 8 sends
             // over BLE (after a 0x4B trigger) reaches the existing SysEx parser.
             if let Some(tx) = sysex_sender {
-                ble::start_ble_notification_listener(&conn, tx, settings_tx);
+                ble::start_ble_notification_listener(&conn, tx, settings_tx, meters_tx);
                 // ponytail: fixed wait for the listener's subscribe; replies sent before it are lost.
                 std::thread::sleep(std::time::Duration::from_secs(1));
                 for s in model::routing::SETTINGS {
                     if let Err(e) = ble::send_packet(&conn, &model::routing::get_packet(s.id)) {
                         log_warn!("[BLE] Setting query 0x{:02X} failed: {}", s.id, e);
                     }
+                }
+                if let Err(e) = ble::send_packet(&conn, &model::routing::METER_SUBSCRIBE) {
+                    log_warn!("[BLE] Meter subscribe failed: {}", e);
                 }
             }
 
@@ -529,6 +534,13 @@ fn update_interface(controller: &mut FLOW8Controller, message: InterfaceMessage)
                 }
             }
 
+            if let Some(ref rx) = controller.meters_receiver {
+                if let Some(m) = rx.try_iter().last() {
+                    controller.meters = m;
+                    controller.meters_at = Some(std::time::Instant::now());
+                }
+            }
+
             if let Some(ref rx) = controller.settings_receiver {
                 while let Ok((id, value)) = rx.try_recv() {
                     controller.settings.insert(id, value);
@@ -606,6 +618,17 @@ fn update_interface(controller: &mut FLOW8Controller, message: InterfaceMessage)
             log!("[APP] Setting 0x{:02X} -> {}", id, value);
             send_ble_packet(controller, &model::routing::set_packet(id, value));
             // The mixer echoes the write; the listener confirms it into `settings`.
+        }
+        InterfaceMessage::PhonesLevel(v) => {
+            controller.phones_value = Some(v);
+            controller.phones_touched = Some(std::time::Instant::now());
+        }
+        InterfaceMessage::PhonesRelease => {
+            if let Some(v) = controller.phones_value {
+                log!("[APP] Phones -> {} ({:.1} dB)", v, model::routing::phones_value_to_db(v));
+                send_ble_packet(controller, &model::routing::phones_packet(v));
+                controller.phones_touched = Some(std::time::Instant::now());
+            }
         }
         InterfaceMessage::FxRoute(fx, mask) => {
             log!("[APP] FX{} routing mask -> {:03b}", fx + 1, mask);

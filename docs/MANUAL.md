@@ -55,6 +55,14 @@ FLOW 8 MIDI Controller is a desktop application that lets you control your Behri
 * Loads mixer snapshots. Snapshot names are displayed when Bluetooth is connected.
 * Tooltips on all sliders display real parameter values (dB, Hz, %) matching the mixer's MIDI implementation.
 
+**New in 2.x (needs Bluetooth):**
+
+* **Routing tab** — USB mode (recording/streaming), phones source and pre/post, monitor pre/post and stereo link,
+  BT/USB play destination, USB return routing, FX return routing, foot switch mode, −10 dBV output pads and mixer app
+  link. Values are read from the mixer when Bluetooth connects; a highlighted button is the mixer's current setting.
+* **PHONES slider** in the top bar — drag and release to set the headphone level; it follows the hardware knob.
+* **Live input meters** — a thin bar beside each channel fader (two for stereo strips).
+
 **What it does NOT do:**
 
 * It does not reflect real-time physical knob/fader movements from the mixer. USB only allows sending commands to the mixer, not receiving its current state. Bluetooth partially solves this — see [Section 10](#10-bluetooth-ble-sync).

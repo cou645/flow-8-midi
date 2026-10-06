@@ -33,6 +33,8 @@ pub fn match_midi_command(
         | InterfaceMessage::BleConnect
         | InterfaceMessage::BleRequestDump
         | InterfaceMessage::SetSetting(..)
+        | InterfaceMessage::PhonesLevel(_)
+        | InterfaceMessage::PhonesRelease
         | InterfaceMessage::FxRoute(..)
         | InterfaceMessage::SyncIntervalChanged(_) => {}
 

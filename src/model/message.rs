@@ -40,6 +40,8 @@ pub enum InterfaceMessage {
     TapTempo,
 
     SetSetting(u8, u8),
+    PhonesLevel(u8),
+    PhonesRelease,
     FxRoute(usize, u8),
 
     LoadSnapshot(u8),

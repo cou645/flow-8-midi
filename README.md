@@ -20,8 +20,9 @@ Connect the FLOW 8 by USB and start the app. Bluetooth is used automatically to 
 
 * Mixer, EQ, Sends, FX and Snapshots pages — every control in the FLOW 8 MIDI implementation.
 * **Routing tab** (new in 2.0): USB recording/streaming, phones source and pre/post, monitor pre/post and stereo link, BT/USB play, USB return routing, FX return routing, foot switch mode and output pads — previously only in the phone app.
-* PHONES level readout (new in 2.0).
-* Live sync from the mixer over Bluetooth.
+* **PHONES level slider** in the top bar — set the headphone level from the PC (new in 2.1).
+* **Live input meters** on every channel strip (new in 2.1).
+* Sync from the mixer over Bluetooth; settings changed in the mixer's menu show up instantly.
 
 ## Screenshots
 
@@ -50,7 +51,7 @@ More in the [User Manual](./docs/MANUAL.md), [Developer Manual](./docs/DEV_MANUA
 
 * Original project: [abelroes/flow-8-midi](https://github.com/abelroes/flow-8-midi) by Abel Rocha Espinosa.
 * Version 2.0: directed and hardware-tested by stemsee.
-* **AI disclosure**: the 2.0 code, protocol research, tools, documentation and README text were written with Claude Opus 5.5 (Anthropic) via Claude Code. No images or video are AI-generated.
+* **AI disclosure**: the 2.x code, protocol research, tools, documentation and README text were written with Claude Opus 5.5 (Anthropic) via Claude Code. No images or video are AI-generated.
 
 If you find this useful, consider [buying me a beer](https://www.buymeacoffee.com/stemsee).
 
@@ -59,7 +60,7 @@ If you find this useful, consider [buying me a beer](https://www.buymeacoffee.co
 ## Disclaimers
 
 * This application is not official. Any damage (to the unit or any peripherals), misuse or act that avoids warranty is not our responsibility. Use it at your own risk.
-* When connected via Bluetooth, the app reads the mixer's full state every second by default (adjustable in Settings), so physical changes show up within about a second. The mixer's live Bluetooth stream carries only meter levels, so instant updates aren't available yet.
+* When connected via Bluetooth, the app reads the mixer's full state every second by default (adjustable in Settings), so fader and knob moves on the hardware show up within about a second. (The mixer can also push instant notifications for hardware moves; the app doesn't use them for faders yet.)
 * On Windows, fetching snapshot names via BLE may fail due to a platform-level BLE subscribe limitation (`"The attribute cannot be written."`). Snapshots still load correctly — only the names are unavailable, so all slots will appear unnamed.
 * Current and future implementations are limited by the FLOW 8 MIDI Implementation (Behringer's FLOW 8 Quick Start Guide).
 * Later, I found [another solution](https://hexler.net/touchosc) for custom control of this unit. Give it a try and use what is best for you!

@@ -534,7 +534,8 @@ type ver  ch prm val
 06 01 06 0f 00 1c   → value 0x00 (repeated, confirming position)
 ```
 
-**Channel addressing (confirmed):**
+**Channel addressing** — ⚠ corrected in §3.5c: targets are **0-based** (Ch 1 = `0x00` … USB/BT = `0x06`,
+Mon 1 = `0x0a`, Mon 2 = `0x0b`, FX 1 = `0x0c`, FX 2 = `0x0d`, Main = `0x0f`). The table below is the original guess:
 
 | CH byte | Target | Confirmed? |
 |---------|--------|-----------|
@@ -760,19 +761,54 @@ bit0 = To Mon 2 (7 = all on). No known way to read it back.
 IEEE-754 float at **unpacked index 651** (standard MIDI 7-in-8 unpacking with the first header byte at raw offset 3; ≈ raw 0x02eb–0x02ef).
 Range −144.0 (OFF) … +10.0 dB, same scale as the faders.
 
-> **WARNING — `06 01 00 0f VV` is NOT a single level.** Writing it (2026-10-06) changed **many levels at once**:
-> Ch1, Ch4, Ch5/6, Ch7/8, USB/BT, the Main bus and the index-651 value, first to OFF and then, after more writes,
-> to roughly −83…−89 dB. Sends, gains and the Mon/FX buses were unaffected. The phone app sends this same packet,
-> so target 0x00 is probably a group/"all faders" control, not the phones. The levels were restored with the standard
-> MIDI CC7 messages. **Do not send BLE 0x06 writes to unknown targets with speakers or headphones connected.**
-> Also: if another program (e.g. the desktop app) reads the FLOW 8 USB MIDI input at the same time, each reader gets
-> only part of the bytes and dumps arrive corrupted. `tools/dump_watch.py` now drops anything that isn't exactly 3068 bytes. The FLOW 8 sends **no USB MIDI at all** when its own controls move (checked raw on hw:F8).
+> **Correction (later the same day):** an earlier version of this note warned that `06 01 00 0f VV` changes many
+> levels at once. That reading came from **corrupted dumps** (the desktop app and a script were both reading the USB
+> MIDI input, so each got only part of the bytes). `06 01 00 0f` is simply the **Ch 1 fader** — see §3.5c.
+> Still: if another program reads the FLOW 8 USB MIDI input at the same time, dumps arrive corrupted;
+> `tools/dump_watch.py` drops anything that isn't exactly 3068 bytes.
 
 **Auth key — unresolved.** From a BlueZ D-Bus client this unit answered the §3.2 key with ATT error 0x0e (even
 after a 1 s delay) and accepted the key its paired phone sent (a different 16-byte key — kept locally, not published).
 Yet the desktop app (btleplug, §3.2 key) writes the key without error and its dump-trigger sync works on this unit —
 although the 0x38 state dump that follows a real auth never arrives ("State dump wait timed out"). Possibly the
 0x4B dump trigger is accepted without auth. Not yet established.
+
+### 3.5c Live control notifications (2026-10-06)
+
+After the app's 0x21 subscribe (`21 01 08 40 41 42 43 c4 c5 c6 cf 00 00 00 00 00 00 00 4e`), the mixer **pushes a
+notification the moment a hardware control moves**, in the same format as the 0x06 write. Mapped one control at a time:
+
+| Hardware control | Notification | Values |
+|---|---|---|
+| Ch 1 fader | `06 01 00 0f VV` | 0–255 |
+| BT/USB knob (USB/BT channel level) | `06 01 06 0f VV` | 0–255 |
+| Main knob (Main level) | `06 01 0f 0f VV` | 0–255 |
+| PHONES knob | `06 01 09 09 VV` | 0–255 (also accepted as a write) |
+| FX MUTE button | `08 01 0c 01 VV`, `08 01 0d 01 VV` (FX1, FX2) | 1 = muted |
+
+| MAIN / MON 1 / MON 2 / FX 1 / FX 2 buttons (layer select) | `41 01 BB` | BB = 0f / 0a / 0b / 0c / 0d |
+| A setting changed in the mixer's menu (e.g. SELECT press on USB mode) | `25 01 id 01 VV` | as the 0x25 settings table |
+| SELECT/ADJUST turn, MENU, TAP | nothing sent | — |
+
+**PHONES is writable**: `06 01 09 09 VV` sets it (tested: only the PHONES value changed). Measured curve:
+0 → OFF (assumed), 40 → −44.9 dB, 127 → −10.2, 191 → 0.0, 223 → +5.0, 255 → +10.0 dB.
+
+Seen in a mixed session: targets `01`–`05` with param `0f` (the other channel faders). **Targets are 0-based
+(Ch 1 = 0x00)**, which corrects §3.4. The earlier "`06 01 00 0f` changes many levels" reading (§3.5b warning)
+coincided with corrupted dumps; `06 01 00 0f` is the Ch 1 fader. 
+
+**Meter stream 0x22** (`22 01 m0…m11 bf bf bf 00 00 chk`, ~3/s, 0..255 per meter):
+
+| Bytes | Meter | Evidence |
+|---|---|---|
+| 2 | Ch 1 | confirmed (mic) |
+| 3, 4, 5 | Ch 2, Ch 3, Ch 4 | strip order |
+| 6, 7 | Ch 5/6 L, R | strip order (steady line-input noise floor) |
+| 8, 9 | Ch 7/8 L, R | strip order |
+| 10, 11 | USB/BT L, R | confirmed (PC playback) |
+| 12, 13 | Main L, R? | stayed 0 in all tests — Main meter not found yet |
+
+Implemented in the app (`model::routing::parse_meters`, `meter_slots`).
 
 ### 3.6 Key Observations
 
@@ -899,7 +935,7 @@ although the 0x38 state dump that follows a real auth never arrives ("State dump
 * \[ ] **Map all parameter IDs for Type 0x06**: We know 0x0f = Level. What are EQ, Pan, Gain, Sends, Mute, Solo, Compressor, etc.?
 * \[ ] **Decode 0x38 BLE state dump structure**: Full byte mapping of the 4-chunk dump to individual mixer parameters
 * \[ ] **Decode 0x21 variable bytes**: What do the variable bytes represent? Viewport? Subscription filter?
-* \[ ] **Map 0x22 metering bytes to specific channels**: Which bytes correspond to which channels?
+* \[x] ~~Map 0x22 metering bytes to specific channels~~: see §3.5c (Main meter still unknown)
 * \[ ] **Test EQ/FX/Send changes via BLE**: Do they use 0x06 with different parameter IDs, or different packet types?
 * \[ ] **Investigate Windows BLE subscribe failure**: HRESULT 0x80650003 prevents reading snapshot names on some Windows systems. May be a btleplug or OS-level issue.
 

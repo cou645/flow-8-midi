@@ -28,7 +28,7 @@ pub fn view_mixer_fx(controller: &FLOW8Controller) -> Element<'_, InterfaceMessa
     let channels_row: Vec<Element<InterfaceMessage>> = controller
         .channels
         .iter()
-        .map(|c| build_channel_strip(c, COMPACT_FADER_HEIGHT))
+        .map(|c| build_channel_strip(c, COMPACT_FADER_HEIGHT, controller.channel_meters(c.id)))
         .collect();
 
     let channels_section = container(

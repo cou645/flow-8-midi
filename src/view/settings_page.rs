@@ -272,7 +272,8 @@ const WHATS_NEW: &[&str] = &[
     "    • From PC (USB): to channel / Mon out 1/2",
     "    • FX1 / FX2 returns: to Main, Mon 1, Mon 2",
     "    • Preferences: foot switch mode, -10 dBV Main / Monitor out pads, mixer app link",
-    "PHONES level readout in the top bar (follows the hardware knob)",
+    "PHONES level slider in the top bar (sets the headphone level; follows the hardware knob)",
+    "Live input meters on every channel strip (Mixer and Mixer+ pages)",
     "Protocol research: settings get/set, FX routing and app tap-tempo packets decoded; notes in docs/",
     "Developer tools: BLE pass-through logger, Android btsnoop decoder, SysEx dump diff watcher (tools/)",
 ];
@@ -304,7 +305,7 @@ fn build_about_section() -> Element<'static, InterfaceMessage> {
 
     let author = text("Original author: Abel Rocha Espinosa").size(11);
     let ai_credit = text(
-        "AI disclosure: the v2.0 additions (Routing tab, PHONES readout, protocol research, tools, \
+        "AI disclosure: the v2.x additions (Routing tab, PHONES slider, live meters, protocol research, tools, \
          documentation and this text) were written with Claude Opus 5.5 (Anthropic) via Claude Code, \
          directed and hardware-tested by stemsee. No images or video in this version are AI-generated.",
     )

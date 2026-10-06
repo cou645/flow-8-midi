@@ -532,6 +532,7 @@ pub fn start_ble_notification_listener(
     conn: &BleConnection,
     sysex_tx: mpsc::Sender<Vec<u8>>,
     settings_tx: mpsc::Sender<(u8, u8)>,
+    meters_tx: mpsc::Sender<[u8; 12]>,
 ) {
     use tokio_stream::StreamExt;
 
@@ -578,6 +579,11 @@ pub fn start_ble_notification_listener(
                         break; // Receiver dropped; UI is gone
                     }
                 }
+                continue;
+            }
+
+            if let Some(m) = crate::model::routing::parse_meters(&data) {
+                let _ = meters_tx.send(m);
                 continue;
             }
 

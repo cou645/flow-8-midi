@@ -86,7 +86,7 @@ class Session:
     """Authenticated BLE session; dumps come back over USB MIDI."""
 
     def __init__(self, mac=None):
-        self.midi_fd = os.open(flow8_rawmidi(), os.O_RDONLY | os.O_NONBLOCK)
+        self.midi_fd = None  # opened on first dump(); BLE-only use must not need the USB port
         dbus.mainloop.glib.DBusGMainLoop(set_as_default=True)
         bus = dbus.SystemBus()
         dev_path, props = find_mixer(bus, find_adapter(bus), mac)
@@ -117,6 +117,8 @@ class Session:
         self.chrc.WriteValue(dbus.Array(b, "y"), {"type": "request"})
 
     def dump(self):
+        if self.midi_fd is None:
+            self.midi_fd = os.open(flow8_rawmidi(), os.O_RDONLY | os.O_NONBLOCK)
         if select.select([self.midi_fd], [], [], 0)[0]:
             os.read(self.midi_fd, 65536)
         self.write(DUMP_TRIGGER)

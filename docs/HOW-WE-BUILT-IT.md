@@ -58,14 +58,28 @@ discards anything that isn't exactly 3068 bytes.
 
 ## 6. What went wrong, and the rules that came out of it
 
-* A guessed Bluetooth write (`06 01 00 0f …`), hoped to be the headphones, turned out to be a **group control**
-  that moved Main and several channels at once. The levels were restored from a dump taken just before, using the
-  official MIDI CC7 messages.
+* A guessed Bluetooth write (`06 01 00 0f …`), hoped to be the headphones, was really the **Ch 1 fader** — but at
+  the time it *looked* like it moved Main and several channels, because the desktop app and the test script were
+  both reading the USB MIDI port and the dumps were corrupted. The levels were restored from a dump taken just
+  before, using the official MIDI CC7 messages.
 * An unlisted MIDI message (channel 8 CC21) changed a hidden Main-bus frequency setting. It was restored to within one MIDI step.
-* No remote command for the PHONES level was found, so it stays display-only.
+* Guessing MIDI CCs for the headphones found nothing for PHONES — and one unlisted CC (channel 8 CC21) silently
+  changed a hidden setting. Guessing turned out to be the wrong approach; listening was the right one (next section).
 
 Rules: **read before you write**, unplug speakers and headphones, change one thing at a time, take a dump before
 and after every write, and stop at the first surprise.
+
+## 7. Listening instead of guessing: live notifications and meters
+
+Sending the phone app's subscribe message (`0x21`, copied verbatim) makes the mixer **push a message the moment a
+hardware control moves** — the same `06 01 target param value` format the app writes. Moving one control at a time
+mapped them: channel faders `00`–`06` (0-based), Main `0f`, **PHONES `06 01 09 09`**, FX MUTE (`08 …`), the bus
+buttons (`41 01 bus`), and menu setting changes (`25 …`). Writing `06 01 09 09 VV` back then set the headphone level
+with nothing else moving — that's the PHONES slider.
+
+The same subscription starts the `0x22` meter stream. Making sound on one input at a time (the Ch 1 mic, then PC
+playback over USB) showed the layout: one byte per mono strip, two per stereo strip, in strip order — that's the
+live input meters.
 
 ## Credits
 

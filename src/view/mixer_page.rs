@@ -9,7 +9,7 @@ use crate::view::widgets::{
 };
 use iced::{
     widget::{
-        button, column, container, row, text, tooltip, tooltip::Position,
+        button, column, container, progress_bar, row, text, tooltip, tooltip::Position,
         Column, Space,
     },
     Center, Element, Fill, Length,
@@ -22,7 +22,7 @@ pub fn view_mixer(controller: &FLOW8Controller) -> Element<'_, InterfaceMessage>
     let channels_row: Vec<Element<InterfaceMessage>> = controller
         .channels
         .iter()
-        .map(|c| build_channel_strip(c, FADER_HEIGHT))
+        .map(|c| build_channel_strip(c, FADER_HEIGHT, controller.channel_meters(c.id)))
         .collect();
 
     let channels_section = container(
@@ -57,7 +57,7 @@ const NAME_SLOT_HEIGHT: f32 = 16.0;
 const PHANTOM_SLOT_HEIGHT: f32 = 30.0;
 const H_SLIDER_SLOT_HEIGHT: f32 = 38.0;
 
-pub fn build_channel_strip(channel: &Channel, fader_height: f32) -> Element<'_, InterfaceMessage> {
+pub fn build_channel_strip(channel: &Channel, fader_height: f32, meters: Vec<u8>) -> Element<'_, InterfaceMessage> {
     let mut col = Column::new()
         .width(Fill)
         .align_x(Center)
@@ -97,9 +97,13 @@ pub fn build_channel_strip(channel: &Channel, fader_height: f32) -> Element<'_, 
     col = col.push(
         column![
             sync_label("Level", 12.0, strip.level_synced),
-            v_slider(1..=127, strip.level, fader_height, move |v| {
-                InterfaceMessage::Level(ch_id, v)
-            }, format_level(strip.level)),
+            row![
+                v_slider(1..=127, strip.level, fader_height, move |v| {
+                    InterfaceMessage::Level(ch_id, v)
+                }, format_level(strip.level)),
+                meter_bars(&meters, fader_height),
+            ]
+            .spacing(3),
         ]
         .align_x(Center)
         .spacing(4),
@@ -268,6 +272,20 @@ fn add_mute_solo<'a>(
         .align_y(Center)
         .spacing(2),
     )
+}
+
+/// Live input meter(s) beside a fader: raw 0..255 from the mixer's 0x22 stream.
+fn meter_bars(meters: &[u8], height: f32) -> Element<'static, InterfaceMessage> {
+    iced::widget::Row::with_children(meters.iter().map(|&m| {
+        progress_bar(0.0..=255.0, m as f32)
+            .vertical()
+            .length(height)
+            .girth(4)
+            .style(progress_bar::success)
+            .into()
+    }))
+    .spacing(1)
+    .into()
 }
 
 pub fn build_bus_strip(bus: &Bus, fader_height: f32) -> Element<'_, InterfaceMessage> {

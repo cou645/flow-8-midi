@@ -1,7 +1,7 @@
 use crate::service::ble::BleStatus;
 use crate::model::{flow8::FLOW8Controller, message::InterfaceMessage, page::Page};
 use iced::{
-    widget::{button, container, row, text, tooltip, tooltip::Position, Space},
+    widget::{button, container, row, slider, text, tooltip, tooltip::Position, Space},
     Center, Element, Fill,
 };
 
@@ -34,21 +34,25 @@ pub fn view_nav_bar(controller: &FLOW8Controller) -> Element<'_, InterfaceMessag
 
     tabs = tabs.push(Space::new().width(Fill));
 
-    let phones = match controller.phones_db {
-        Some(db) if db <= -144.0 => "Phones: OFF".to_string(),
-        Some(db) => format!("Phones: {:+.1} dB", db),
-        None => "Phones: --".to_string(),
-    };
-    tabs = tabs.push(
-        tooltip(
-            container(text(phones).size(10)).padding([4, 8]).style(container::rounded_box),
-            container(text("PHONES knob level, read from the last sync (read-only)").size(11))
-                .padding(6)
-                .style(container::rounded_box),
-            Position::Bottom,
-        )
-        .gap(4),
-    );
+    if let Some(v) = controller.phones_value {
+        let db = crate::model::routing::phones_value_to_db(v);
+        let label = if db <= -144.0 { "OFF".to_string() } else { format!("{:+.1} dB", db) };
+        tabs = tabs.push(
+            container(
+                row![
+                    text("Phones").size(10),
+                    slider(0..=255u8, v, InterfaceMessage::PhonesLevel)
+                        .on_release(InterfaceMessage::PhonesRelease)
+                        .width(110),
+                    container(text(label).size(10)).width(56),
+                ]
+                .spacing(6)
+                .align_y(Center),
+            )
+            .padding([4, 8])
+            .style(container::rounded_box),
+        );
+    }
 
     let last_sync_label = format_last_sync(controller.last_sync_time);
     tabs = tabs.push(

@@ -102,6 +102,13 @@ pub struct FLOW8Controller {
     pub snapshot_resync_at: Option<Instant>,
     /// Phones level in dB from the SysEx dump (read-only; no known write command).
     pub phones_db: Option<f32>,
+    /// PHONES slider position (0..=255); follows the dump unless dragged in the last 2 s.
+    pub phones_value: Option<u8>,
+    pub phones_touched: Option<Instant>,
+    /// Live input meters from the BLE 0x22 stream (see routing::meter_slots).
+    pub meters: [u8; 12],
+    pub meters_at: Option<Instant>,
+    pub meters_receiver: Option<mpsc::Receiver<[u8; 12]>>,
     /// BLE settings (model::routing::SETTINGS) by id, as last reported/set.
     pub settings: HashMap<u8, u8>,
     pub settings_receiver: Option<mpsc::Receiver<(u8, u8)>>,
@@ -115,6 +122,15 @@ const CHANNEL_RANGE: RangeInclusive<u8> = 0..=6;
 const BUS_RANGE: RangeInclusive<u8> = 7..=11;
 
 impl FLOW8Controller {
+    /// Meter levels for one input strip; zeros once the stream has been quiet for 2 s.
+    pub fn channel_meters(&self, channel_id: u8) -> Vec<u8> {
+        let live = self.meters_at.is_some_and(|t| t.elapsed().as_secs() < 2);
+        crate::model::routing::meter_slots(channel_id)
+            .iter()
+            .map(|&i| if live { self.meters[i] } else { 0 })
+            .collect()
+    }
+
     pub fn mark_all_synced(&mut self) {
         for ch in &mut self.channels {
             ch.mark_all_synced();
@@ -206,6 +222,11 @@ impl FLOW8Controller {
             fx_muted: false,
             snapshot_resync_at: None,
             phones_db: None,
+            phones_value: None,
+            phones_touched: None,
+            meters: [0; 12],
+            meters_at: None,
+            meters_receiver: None,
             settings: HashMap::new(),
             settings_receiver: None,
             fx_routes: [None; 2],

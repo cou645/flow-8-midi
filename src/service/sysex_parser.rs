@@ -394,6 +394,10 @@ pub fn apply_dump_to_controller(dump: &SysExDump, controller: &mut FLOW8Controll
     synced += apply_nine_band_eq(dump, controller);
     synced += apply_fx_params(dump, controller);
     controller.phones_db = decode_float(&dump.raw, &PHONES_LEVEL);
+    let dragging = controller.phones_touched.is_some_and(|t| t.elapsed().as_secs() < 2);
+    if let (Some(db), false) = (controller.phones_db, dragging) {
+        controller.phones_value = Some(crate::model::routing::phones_db_to_value(db));
+    }
 
     log!(
         "[SYSEX] Dump applied ({} bytes). {} parameters synced.",
