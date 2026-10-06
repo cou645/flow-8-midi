@@ -121,7 +121,11 @@ async fn scan_for_flow8(adapter: &Adapter) -> Result<Peripheral, String> {
 
     log_debug!("[BLE] Found {} device(s) during scan", peripherals.len());
 
-    let mut name_match: Option<Peripheral> = None;
+    // The mixer shows up twice: "FLOW 8 Audio (…)" is its classic-Bluetooth
+    // audio side (connecting to it fails: br-connection-profile-unavailable),
+    // "FLOW 8 LE" the BLE control side. Rank, don't take the first match:
+    // control service UUID > a "… LE" name > any FLOW 8 name.
+    let mut best: Option<(u8, Peripheral)> = None;
     let target_svc = service_uuid();
 
     for p in peripherals {
@@ -134,23 +138,30 @@ async fn scan_for_flow8(adapter: &Adapter) -> Result<Peripheral, String> {
 
             log_debug!("[BLE]   device: \"{}\" addr={}", label, addr);
 
-            if name_match.is_none() {
-                if let Some(ref name) = props.local_name {
-                    if name.to_uppercase().contains(FLOW8_NAME_KEYWORD) {
-                        log!("[BLE] Matched by name: \"{}\"", name);
-                        name_match = Some(p.clone());
-                        continue;
-                    }
-                }
-
-                if props.services.contains(&target_svc) {
-                    log!("[BLE] Matched by Service UUID: \"{}\" addr={}", label, addr);
-                    name_match = Some(p.clone());
-                }
+            let upper = label.to_uppercase();
+            let rank = if props.services.contains(&target_svc) {
+                3
+            } else if upper.contains(FLOW8_NAME_KEYWORD) && upper.split_whitespace().any(|w| w == "LE") {
+                2
+            } else if upper.contains(FLOW8_NAME_KEYWORD) {
+                1
+            } else {
+                0
+            };
+            if rank > best.as_ref().map_or(0, |(r, _)| *r) {
+                best = Some((rank, p.clone()));
             }
         }
     }
 
+    if let Some((rank, ref p)) = best {
+        if let Ok(Some(props)) = p.properties().await {
+            log!("[BLE] Matched by {}: \"{}\" addr={:?}",
+                 if rank == 3 { "Service UUID" } else { "name" },
+                 props.local_name.as_deref().unwrap_or("(unnamed)"), props.address);
+        }
+    }
+    let name_match = best.map(|(_, p)| p);
     name_match.ok_or_else(|| "FLOW 8 LE not found during scan".to_string())
 }
 

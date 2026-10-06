@@ -75,6 +75,10 @@ pub fn init() {
         system_diagnostics()
     );
 
+    // Keep the previous run's log: a crash's evidence would otherwise be
+    // wiped by the restart that follows it.
+    let _ = std::fs::rename(&path, path.with_extension("prev.log"));
+
     if let Ok(mut file) = OpenOptions::new()
         .write(true)
         .truncate(true)
@@ -87,6 +91,18 @@ pub fn init() {
     LOG_PATH.set(path).ok();
 
     log_with_level(LogLevel::Info, &header);
+
+    // Panics go to stderr, which is lost when started from a menu: write
+    // them (with a backtrace) to the log too.
+    let default_hook = std::panic::take_hook();
+    std::panic::set_hook(Box::new(move |info| {
+        let thread = std::thread::current();
+        log_with_level(LogLevel::Error, &format!(
+            "PANIC in thread '{}': {}\n{}",
+            thread.name().unwrap_or("?"), info,
+            std::backtrace::Backtrace::force_capture()));
+        default_hook(info);
+    }));
 }
 
 fn push_to_buffer(entry: LogEntry) {
