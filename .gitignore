@@ -1,3 +1,5 @@
 # Rust generated
 target/
 *.pdb
+captures/
+__pycache__/

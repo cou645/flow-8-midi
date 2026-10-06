@@ -8,7 +8,8 @@ mod view;
 use view::{
     device_select_page::view_device_select, eq_page::view_eq,
     fx_page::view_fx, mixer_fx_page::view_mixer_fx, mixer_page::view_mixer,
-    nav_bar::view_nav_bar, sends_page::view_sends, settings_page::view_settings,
+    nav_bar::view_nav_bar, routing_page::view_routing, sends_page::view_sends,
+    settings_page::view_settings,
     snapshots_page::view_snapshots,
 };
 use image::load_from_memory;
@@ -159,6 +160,8 @@ fn start_ble_connection(controller: &mut FLOW8Controller) {
 
     let (status_tx, status_rx) = std::sync::mpsc::channel();
     let (snapshot_tx, snapshot_rx) = std::sync::mpsc::channel();
+    let (settings_tx, settings_rx) = std::sync::mpsc::channel();
+    controller.settings_receiver = Some(settings_rx);
     controller.ble_status_receiver = Some(status_rx);
     controller.snapshot_names_receiver = Some(snapshot_rx);
     controller.ble_status = ble::BleStatus::Scanning;
@@ -173,7 +176,14 @@ fn start_ble_connection(controller: &mut FLOW8Controller) {
             // Subscribe to BLE notifications so any SysEx dump the FLOW 8 sends
             // over BLE (after a 0x4B trigger) reaches the existing SysEx parser.
             if let Some(tx) = sysex_sender {
-                ble::start_ble_notification_listener(&conn, tx);
+                ble::start_ble_notification_listener(&conn, tx, settings_tx);
+                // ponytail: fixed wait for the listener's subscribe; replies sent before it are lost.
+                std::thread::sleep(std::time::Duration::from_secs(1));
+                for s in model::routing::SETTINGS {
+                    if let Err(e) = ble::send_packet(&conn, &model::routing::get_packet(s.id)) {
+                        log_warn!("[BLE] Setting query 0x{:02X} failed: {}", s.id, e);
+                    }
+                }
             }
 
             if let Ok(mut guard) = conn_arc.lock() {
@@ -251,6 +261,20 @@ fn try_ble_dump_trigger(controller: &FLOW8Controller) -> Option<Result<(), Strin
         .and_then(|guard| guard.as_ref().map(ble::send_dump_trigger))
 }
 
+fn send_ble_packet(controller: &FLOW8Controller, packet: &[u8]) -> bool {
+    match controller.ble_connection.lock().ok().and_then(|g| g.as_ref().map(|c| ble::send_packet(c, packet))) {
+        Some(Ok(())) => true,
+        Some(Err(e)) => {
+            log_error!("[APP] {}", e);
+            false
+        }
+        None => {
+            log_warn!("[APP] No BLE connection — routing needs Bluetooth");
+            false
+        }
+    }
+}
+
 fn view(controller: &FLOW8Controller) -> Element<'_, InterfaceMessage> {
     if controller.current_page == Page::DeviceSelect {
         return view_device_select(controller);
@@ -265,6 +289,7 @@ fn view(controller: &FLOW8Controller) -> Element<'_, InterfaceMessage> {
         Page::Sends => view_sends(controller),
         Page::Fx => view_fx(controller),
         Page::Snapshots => view_snapshots(controller),
+        Page::Routing => view_routing(controller),
         Page::Settings => view_settings(controller),
         Page::DeviceSelect => unreachable!(),
     };
@@ -504,6 +529,12 @@ fn update_interface(controller: &mut FLOW8Controller, message: InterfaceMessage)
                 }
             }
 
+            if let Some(ref rx) = controller.settings_receiver {
+                while let Ok((id, value)) = rx.try_recv() {
+                    controller.settings.insert(id, value);
+                }
+            }
+
             if let Some(ref snap_rx) = controller.snapshot_names_receiver {
                 while let Ok(names) = snap_rx.try_recv() {
                     log!("[BLE] Received {} snapshot names", names.len());
@@ -568,6 +599,18 @@ fn update_interface(controller: &mut FLOW8Controller, message: InterfaceMessage)
                 }
                 Some(Err(e)) => log_error!("[APP] Dump trigger failed: {}", e),
                 None => log_warn!("[APP] No BLE connection for dump trigger"),
+            }
+        }
+
+        InterfaceMessage::SetSetting(id, value) => {
+            log!("[APP] Setting 0x{:02X} -> {}", id, value);
+            send_ble_packet(controller, &model::routing::set_packet(id, value));
+            // The mixer echoes the write; the listener confirms it into `settings`.
+        }
+        InterfaceMessage::FxRoute(fx, mask) => {
+            log!("[APP] FX{} routing mask -> {:03b}", fx + 1, mask);
+            if send_ble_packet(controller, &model::routing::fx_route_packet(fx, mask)) {
+                controller.fx_routes[fx] = Some(mask);
             }
         }
 

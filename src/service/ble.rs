@@ -488,6 +488,17 @@ pub fn send_dump_trigger(conn: &BleConnection) -> Result<(), String> {
     })
 }
 
+/// Writes one already-checksummed packet (see model::routing) to the FLOW 8.
+pub fn send_packet(conn: &BleConnection, packet: &[u8]) -> Result<(), String> {
+    conn.runtime.block_on(async {
+        log_debug!("[BLE] Write {:02X?}", packet);
+        conn.peripheral
+            .write(&conn.characteristic, packet, WriteType::WithResponse)
+            .await
+            .map_err(|e| format!("BLE write failed: {}", e))
+    })
+}
+
 pub fn disconnect(conn: &BleConnection) {
     conn.runtime.block_on(async {
         if let Err(e) = conn.peripheral.disconnect().await {
@@ -509,6 +520,7 @@ pub fn disconnect(conn: &BleConnection) {
 pub fn start_ble_notification_listener(
     conn: &BleConnection,
     sysex_tx: mpsc::Sender<Vec<u8>>,
+    settings_tx: mpsc::Sender<(u8, u8)>,
 ) {
     use tokio_stream::StreamExt;
 
@@ -555,6 +567,13 @@ pub fn start_ble_notification_listener(
                         break; // Receiver dropped; UI is gone
                     }
                 }
+                continue;
+            }
+
+            // Setting replies (to our 0x26 queries) and echoes of 0x25 writes.
+            if let Some(setting) = crate::model::routing::parse_setting_reply(&data) {
+                log_debug!("[BLE] Setting 0x{:02X} = {}", setting.0, setting.1);
+                let _ = settings_tx.send(setting);
                 continue;
             }
 

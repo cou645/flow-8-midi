@@ -4,6 +4,7 @@ pub mod fx_page;
 pub mod mixer_fx_page;
 pub mod mixer_page;
 pub mod nav_bar;
+pub mod routing_page;
 pub mod sends_page;
 pub mod settings_page;
 pub mod snapshots_page;

@@ -31,6 +31,8 @@ pub fn match_midi_command(
         | InterfaceMessage::Tick
         | InterfaceMessage::BleConnect
         | InterfaceMessage::BleRequestDump
+        | InterfaceMessage::SetSetting(..)
+        | InterfaceMessage::FxRoute(..)
         | InterfaceMessage::SyncIntervalChanged(_) => {}
 
         #[cfg(any(debug_assertions, feature = "dev-tools"))]

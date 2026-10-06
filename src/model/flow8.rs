@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use std::fmt;
 use std::ops::RangeInclusive;
 use std::sync::{mpsc, Arc, Mutex};
@@ -99,6 +100,13 @@ pub struct FLOW8Controller {
     pub snapshot_names_receiver: Option<mpsc::Receiver<Vec<Option<String>>>>,
     pub fx_muted: bool,
     pub snapshot_resync_at: Option<Instant>,
+    /// Phones level in dB from the SysEx dump (read-only; no known write command).
+    pub phones_db: Option<f32>,
+    /// BLE settings (model::routing::SETTINGS) by id, as last reported/set.
+    pub settings: HashMap<u8, u8>,
+    pub settings_receiver: Option<mpsc::Receiver<(u8, u8)>>,
+    /// FX1/FX2 return routing masks; None until set from here (no known read).
+    pub fx_routes: [Option<u8>; 2],
     #[cfg(any(debug_assertions, feature = "dev-tools"))]
     pub calibration: CalibrationState,
 }
@@ -197,6 +205,10 @@ impl FLOW8Controller {
             snapshot_names_receiver: None,
             fx_muted: false,
             snapshot_resync_at: None,
+            phones_db: None,
+            settings: HashMap::new(),
+            settings_receiver: None,
+            fx_routes: [None; 2],
             #[cfg(any(debug_assertions, feature = "dev-tools"))]
             calibration: CalibrationState::new(),
         }

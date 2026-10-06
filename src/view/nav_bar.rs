@@ -5,7 +5,7 @@ use iced::{
     Center, Element, Fill,
 };
 
-const NAV_PAGES: [Page; 6] = [Page::Mixer, Page::MixerFx, Page::Eq, Page::Sends, Page::Fx, Page::Snapshots];
+const NAV_PAGES: [Page; 7] = [Page::Mixer, Page::MixerFx, Page::Eq, Page::Sends, Page::Fx, Page::Snapshots, Page::Routing];
 
 const SYNCED_COLOR: iced::Color = iced::Color {
     r: 0.2,
@@ -33,6 +33,22 @@ pub fn view_nav_bar(controller: &FLOW8Controller) -> Element<'_, InterfaceMessag
     }
 
     tabs = tabs.push(Space::new().width(Fill));
+
+    let phones = match controller.phones_db {
+        Some(db) if db <= -144.0 => "Phones: OFF".to_string(),
+        Some(db) => format!("Phones: {:+.1} dB", db),
+        None => "Phones: --".to_string(),
+    };
+    tabs = tabs.push(
+        tooltip(
+            container(text(phones).size(10)).padding([4, 8]).style(container::rounded_box),
+            container(text("PHONES knob level, read from the last sync (read-only)").size(11))
+                .padding(6)
+                .style(container::rounded_box),
+            Position::Bottom,
+        )
+        .gap(4),
+    );
 
     let last_sync_label = format_last_sync(controller.last_sync_time);
     tabs = tabs.push(

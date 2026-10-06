@@ -185,6 +185,10 @@ const BUS_LEVELS: [FloatParam; 5] = [
     FloatParam { msb_off: 0x0418, data_offs: [0x041B, 0x041C, 0x041D, 0x041E], bit_indices: [2, 3, 4, 5] },
 ];
 
+/// Phones level (dB). Found by diffing dumps while turning the PHONES knob, 2026-10-06.
+const PHONES_LEVEL: FloatParam =
+    FloatParam { msb_off: 0x02EB, data_offs: [0x02EC, 0x02ED, 0x02EE, 0x02EF], bit_indices: [0, 1, 2, 3] };
+
 const BUS_BALANCES: [FloatParam; 5] = [
     FloatParam { msb_off: 0x054C, data_offs: [0x0547, 0x0548, 0x0549, 0x054E], bit_indices: [6, 5, 4, 1] },
     FloatParam { msb_off: 0x0530, data_offs: [0x052E, 0x052F, 0x0531, 0x0536], bit_indices: [3, 2, 0, 5] },
@@ -389,6 +393,7 @@ pub fn apply_dump_to_controller(dump: &SysExDump, controller: &mut FLOW8Controll
     synced += apply_bus_limiters(dump, controller);
     synced += apply_nine_band_eq(dump, controller);
     synced += apply_fx_params(dump, controller);
+    controller.phones_db = decode_float(&dump.raw, &PHONES_LEVEL);
 
     log!(
         "[SYSEX] Dump applied ({} bytes). {} parameters synced.",

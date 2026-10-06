@@ -704,6 +704,76 @@ PHASE 10 — MIDI Dump (t=620.19s)
 ├─ t=620.24  Write Response ←── FLOW 8
 ```
 
+### 3.5a Observations from a second unit (2026-10-06)
+
+* **Advertising** (31-byte ADV, no Flags field): 128-bit service UUID + 32-bit Service Data `0x14839ad4 → 00 fd 06 2b 06 39 f1`; name `FLOW 8 LE` in the scan response. `fd062b0639f1` is the start of the 0x39 auth key. Byte 0 of the service data (and byte 17 of the identity packet) was seen as `00` and `01` across sessions — possibly a connected/state flag.
+* **Identity** is sent as a single consolidated `35 01 …` packet and **repeated every ~0.5 s** until the client authenticates. This unit's identity differs from the one above: `35 01 3d d5 ab dd 22 8c 02 8e 58 78 e4 4c e6 29 6a 6a 00 00 09 2d e5 0c`.
+* The mixer **drops a client that has not sent 0x39 within ~30 s**.
+* The characteristic's flags are `write`, `notify` (no write-without-response).
+* A phone that has never connected needed the hardware **BT pairing mode** (time-limited button) before the app could connect; a desktop BLE client connected without it.
+* The mixer shows up as two Bluetooth devices: `FLOW 8 LE` (BLE app control, this protocol) and `FLOW 8 Audio` (classic A2DP streaming).
+
+### 3.5b App-only controls — Pixel 9a HCI capture (2026-10-06, FLOW app 1.12)
+
+Capture: `captures/session-full.btsnoop`, decode with `tools/btsnoop_att.py`. The mixer echoes every write.
+Labels marked **?** are not yet matched to an app action.
+
+**Type 0x25 — Setting write (phone → mixer)** and **0x26 — Setting read**: `25 01 [id] [len] [value…] [chk]`.
+Same record format as the 0x25 query response, so 0x25/0x26 are a generic get/set for mixer settings.
+
+| id | len | values | meaning (FLOW app 1.12 screen) |
+|----|-----|--------|---------|
+| 0x02 | 1 | 0/1 | Routing › BT/USB play: 0 = To main mix, 1 = Phones only |
+| 0x03 | 1 | 0/1 | Preferences › Foot switch mode: 0 = FX mute/tap, 1 = Snapshot up/down |
+| 0x05 | var | `"Unnamed-11-88"` | Bluetooth audio device name |
+| 0x07 | 1 | 0/1 | Routing › USB: 0 = Recording, 1 = Streaming ("stereo post fader") |
+| 0x08 | 1 | 0/1/2 | Routing › From PC, left USB column: 0 = off, 1 = To channel, 2 = Mon out 1/2 |
+| 0x09 | 1 | 0/1 | Routing › From PC, right USB column → To channel |
+| 0x0a | 1 | 0/1 | Routing › From PC, right USB column → Mon out 1/2 |
+| 0x0b | 1 | 0/1 | Routing › Monitor 1/2 stereo link |
+| 0x0c | 1 | 0/1 | Routing › Phones source: 0 = Main, 1 = Mon 1/2 |
+| 0x0d | 1 | 0/1 | Routing › Phones: 0 = Pre, 1 = Post |
+| 0x0e | 1 | 0/1 | Preferences › −10 dBV Main out |
+| 0x0f | 1 | 0/1 | Preferences › −10 dBV Monitor out |
+| 0x10 | 1 | 0x1f | ? (written once on the Preferences tab) |
+| 0x11 | 1 | 0/1 | Routing › Monitor 1/2: 0 = Pre, 1 = Post |
+| 0x80 | 0 | — | ? (read at connect, empty) |
+| 0xb0 | 1 | 0/1 | Preferences › Mixer app link: 0 = Independent, 1 = Layers follow |
+
+Mapping confirmed by reading every id with 0x26 and comparing to screenshots of the app (`captures/app-shot*.png`).
+Implemented in `src/model/routing.rs` (Routing tab).
+
+**Type 0x11 — FX return routing**: `11 01 [bus] [x] 00 00 [mask] [chk]`, e.g. `11 01 0c 18 00 00 07 3d`.
+bus 0x0c = FX1 (x=0x18), 0x0d = FX2 (x=0x17; meaning of x unknown). mask bit2 = To Main, bit1 = To Mon 1,
+bit0 = To Mon 2 (7 = all on). No known way to read it back.
+
+**Type 0x40 — Tap tempo from app**: `40 01 [bpm_hi] [bpm_lo] [chk]`; the app computes BPM itself
+(six taps ~0.3 s apart sent 251, 222, 195, 192, 184, 197).
+
+**Type 0x41 — Select bus/view**: `41 01 [bus] [chk]` (0x0c, 0x0d), followed by a fresh 0x21 subscribe.
+
+**Type 0x06** seen as `06 01 00 0f [value] [chk]` — channel 0, parameter 0x0f, continuous (fader-like sweep).
+
+**Snapshot names** (0x27) arrive at connect: `27 01 03 "now" 04 "this" …` (length-prefixed strings).
+
+**Headphone (PHONES) level — found in the SysEx dump** (`captures/dumps-phones/`, `tools/dump_watch.py`):
+IEEE-754 float at **unpacked index 651** (standard MIDI 7-in-8 unpacking with the first header byte at raw offset 3; ≈ raw 0x02eb–0x02ef).
+Range −144.0 (OFF) … +10.0 dB, same scale as the faders.
+
+> **WARNING — `06 01 00 0f VV` is NOT a single level.** Writing it (2026-10-06) changed **many levels at once**:
+> Ch1, Ch4, Ch5/6, Ch7/8, USB/BT, the Main bus and the index-651 value, first to OFF and then, after more writes,
+> to roughly −83…−89 dB. Sends, gains and the Mon/FX buses were unaffected. The phone app sends this same packet,
+> so target 0x00 is probably a group/"all faders" control, not the phones. The levels were restored with the standard
+> MIDI CC7 messages. **Do not send BLE 0x06 writes to unknown targets with speakers or headphones connected.**
+> Also: if another program (e.g. the desktop app) reads the FLOW 8 USB MIDI input at the same time, each reader gets
+> only part of the bytes and dumps arrive corrupted. `tools/dump_watch.py` now drops anything that isn't exactly 3068 bytes. The FLOW 8 sends **no USB MIDI at all** when its own controls move (checked raw on hw:F8).
+
+**Auth key — unresolved.** From a BlueZ D-Bus client this unit answered the §3.2 key with ATT error 0x0e (even
+after a 1 s delay) and accepted the key its paired phone sent (a different 16-byte key — kept locally, not published).
+Yet the desktop app (btleplug, §3.2 key) writes the key without error and its dump-trigger sync works on this unit —
+although the 0x38 state dump that follows a real auth never arrives ("State dump wait timed out"). Possibly the
+0x4B dump trigger is accepted without auth. Not yet established.
+
 ### 3.6 Key Observations
 
 1. The FLOW 8 uses **two separate Bluetooth interfaces**:

@@ -39,6 +39,9 @@ pub enum InterfaceMessage {
     FxMute,
     TapTempo,
 
+    SetSetting(u8, u8),
+    FxRoute(usize, u8),
+
     LoadSnapshot(u8),
     ResetMixer,
 

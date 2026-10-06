@@ -9,6 +9,7 @@ pub enum Page {
     Sends,
     Fx,
     Snapshots,
+    Routing,
     Settings,
 }
 
@@ -22,6 +23,7 @@ impl fmt::Display for Page {
             Page::Sends => "Sends",
             Page::Fx => "FX",
             Page::Snapshots => "Snapshots",
+            Page::Routing => "Routing",
             Page::Settings => "Settings",
         };
         write!(f, "{}", text)
