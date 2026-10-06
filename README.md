@@ -44,6 +44,8 @@ cargo run --release
 
 More in the [User Manual](./docs/MANUAL.md), [Developer Manual](./docs/DEV_MANUAL.md) and [protocol notes](./docs/flow8-midi-implementation.md).
 
+**[How 2.0 was built](./docs/HOW-WE-BUILT-IT.md)**: a fake FLOW 8 on Linux (BLE pass-through), Android Bluetooth capture, and dump diffing.
+
 ## Credits
 
 * Original project: [abelroes/flow-8-midi](https://github.com/abelroes/flow-8-midi) by Abel Rocha Espinosa.
