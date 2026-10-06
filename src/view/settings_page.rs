@@ -303,6 +303,12 @@ fn build_about_section() -> Element<'static, InterfaceMessage> {
     .size(11);
 
     let author = text("Original author: Abel Rocha Espinosa").size(11);
+    let ai_credit = text(
+        "AI disclosure: the v2.0 additions (Routing tab, PHONES readout, protocol research, tools, \
+         documentation and this text) were written with Claude Opus 5.5 (Anthropic) via Claude Code, \
+         directed and hardware-tested by stemsee. No images or video in this version are AI-generated.",
+    )
+    .size(11);
     let license = text("License: GNU GPLv3").size(11);
     let link_row = |label, url, msg| {
         row![
@@ -352,6 +358,7 @@ fn build_about_section() -> Element<'static, InterfaceMessage> {
             description,
             Space::new().height(6),
             author,
+            ai_credit,
             license,
             repo_row,
             origin_row,

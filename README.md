@@ -17,6 +17,12 @@ Made with 🦀 [Rust](https://www.rust-lang.org/), 🧊 [iced](https://iced.rs/)
 * **Repository**: [github.com/cou645/flow-8-midi](https://github.com/cou645/flow-8-midi)
 * **Original Repository**: [github.com/abelroes/flow-8-midi](https://github.com/abelroes/flow-8-midi) by Abel Rocha Espinosa
 
+## Credits
+
+* **Original project and author**: [Abel Rocha Espinosa](https://github.com/abelroes/flow-8-midi).
+* **Fork (v2.0)**: directed and tested on hardware by stemsee.
+* **AI disclosure**: the v2.0 additions — code (Routing tab, PHONES readout, BLE settings/routing support), protocol research, developer tools, documentation and README text — were written with **Claude Opus 5.5 (Anthropic) via Claude Code**. No images or video in this version are AI-generated.
+
 ## What's new in this fork
 
 * **Routing tab**: mixer settings that were only reachable from the FLOW phone app, read from the mixer when Bluetooth connects:
