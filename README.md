@@ -19,16 +19,16 @@ Connect the FLOW 8 by USB and start the app. Bluetooth is used automatically to 
 ## Features
 
 * Mixer, EQ, Sends, FX and Snapshots pages — every control in the FLOW 8 MIDI implementation.
-* **Routing tab** (new in 2.0): USB recording/streaming, phones source and pre/post, monitor pre/post and stereo link, BT/USB play, USB return routing, FX return routing, foot switch mode and output pads — previously only in the phone app.
-* **PHONES level slider** in the top bar — set the headphone level from the PC (new in 2.1).
-* **Live meters** on every input strip and on Main (new in 2.1).
+* **Routing tab**: USB recording/streaming, phones source and pre/post, monitor pre/post and stereo link, BT/USB play, USB return routing, FX return routing, foot switch mode and output pads — previously only in the phone app.
+* **PHONES level slider** in the top bar — set the headphone level from the PC.
+* **Live meters** on every input strip and on Main.
 * Sync from the mixer over Bluetooth; settings changed in the mixer's menu show up instantly.
 
 ## Screenshots
 
 | | |
 |---|---|
-| **Mixer** — levels, mute/solo, gain, comp, low cut, 48V, live meters, PHONES slider | **Routing** *(new in 2.0)* — USB, phones, monitor, BT/USB, FX returns, preferences |
+| **Mixer** — levels, mute/solo, gain, comp, low cut, 48V, live meters, PHONES slider | **Routing** — USB, phones, monitor, BT/USB, FX returns, preferences |
 | <img alt="Mixer" src="./resources/screenshots/Flow-8-Mixer-meters.png" width="100%"> | <img alt="Routing" src="./resources/screenshots/Flow-8-Routing.png" width="100%"> |
 | **EQ** — 4-band per channel, 9-band + limiter per bus | **Sends** — Monitor 1/2 and FX 1/2 per channel |
 | <img alt="EQ" src="./resources/screenshots/Flow-8-EQ.png" width="100%"> | <img alt="Sends" src="./resources/screenshots/Flow-8-Sends.png" width="100%"> |
@@ -45,13 +45,13 @@ cargo run --release
 
 More in the [User Manual](./docs/MANUAL.md), [Developer Manual](./docs/DEV_MANUAL.md) and [protocol notes](./docs/flow8-midi-implementation.md).
 
-**[How 2.0 was built](./docs/HOW-WE-BUILT-IT.md)**: a fake FLOW 8 on Linux (BLE pass-through), Android Bluetooth capture, and dump diffing.
+**[How it was built](./docs/HOW-WE-BUILT-IT.md)**: a fake FLOW 8 on Linux (BLE pass-through), Android Bluetooth capture, and dump diffing.
 
 ## Credits
 
 * Original project: [abelroes/flow-8-midi](https://github.com/abelroes/flow-8-midi) by Abel Rocha Espinosa.
-* Version 2.0: directed and hardware-tested by stemsee.
-* **AI disclosure**: the 2.x code, protocol research, tools, documentation and README text were written with Claude Opus 5.5 (Anthropic) via Claude Code. No images or video are AI-generated.
+* Version 2 and later: directed and hardware-tested by stemsee.
+* **AI disclosure**: the version 2 code, protocol research, tools, documentation and README text were written with Claude Opus 5.5 (Anthropic) via Claude Code. No images or video are AI-generated.
 
 If you find this useful, consider [buying me a beer](https://www.buymeacoffee.com/stemsee).
 

@@ -1,4 +1,4 @@
-# How 2.0 was built
+# How it was built
 
 Version 2.0 adds the FLOW 8 settings that Behringer only exposes in its phone app. None of them are in the
 official MIDI chart, so the protocol had to be worked out from the outside. This is how, including what didn't
