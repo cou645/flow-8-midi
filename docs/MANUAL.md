@@ -144,7 +144,7 @@ Each input channel strip contains (from top to bottom):
 | **Channel label** | Text (e.g., "Ch 1", "USB/BT") | All channels |
 | **Channel name** | Text (loaded via BLE, e.g., "Saxophone") | All channels |
 | **Mute / Solo** | Toggle buttons (M and S) | All channels |
-| **48V** | Toggle button (double-click to activate) | Ch 1–2 only (XLR) |
+| **48V** | Toggle button (click twice within 3 s) | Ch 1–2 only (XLR) |
 | **Gain** | Horizontal slider (-20 to +60 dB) | Ch 1–6 only |
 | **Level** | Vertical slider (OFF / -70 to +10 dB) | All channels |
 | **Bal** | Horizontal slider (L–C–R) | All channels |
@@ -153,7 +153,7 @@ Each input channel strip contains (from top to bottom):
 
 > **Note:** Channel 7 (USB/BT) does not have Gain, Comp, or Low Cut controls — this matches the physical mixer's behavior.
 
-> **Note:** Phantom Power (48V) requires a **double-click** to toggle, preventing accidental activation. The first click shows a warning; the second click confirms.
+> **Note:** Phantom Power (48V) needs **two clicks within 3 seconds** to toggle, preventing accidental activation. The first click shows a warning (⚠ 48V ⚠); the second click confirms.
 
 ### 4.2 Bus Strips
 

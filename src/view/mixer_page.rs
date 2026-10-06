@@ -184,7 +184,7 @@ fn build_phantom_slot(channel: &Channel) -> Element<'_, InterfaceMessage> {
     {
         let awaiting_confirm = channel
             .phantom_last_click
-            .map(|t| t.elapsed().as_millis() < 500)
+            .map(|t| t.elapsed().as_millis() < crate::model::flow8::PHANTOM_CONFIRM_MS)
             .unwrap_or(false);
 
         let base = button(if awaiting_confirm {
@@ -208,7 +208,7 @@ fn build_phantom_slot(channel: &Channel) -> Element<'_, InterfaceMessage> {
         let tip_text = if awaiting_confirm {
             "\u{26A0} CLICK AGAIN to confirm!\nPhantom Power can damage unbalanced microphones."
         } else {
-            "\u{26A0} Double-click to toggle Phantom Power (+48V)\nWARNING: May damage unbalanced mics!"
+            "\u{26A0} Click, then click again within 3 s to toggle Phantom Power (+48V)\nWARNING: May damage unbalanced mics!"
         };
 
         let tip = tooltip(

@@ -370,7 +370,7 @@ fn update_interface(controller: &mut FLOW8Controller, message: InterfaceMessage)
             let c = &mut controller.channels[ch as usize];
             let is_double = c
                 .phantom_last_click
-                .map(|prev| now.duration_since(prev).as_millis() < 500)
+                .map(|prev| now.duration_since(prev).as_millis() < model::flow8::PHANTOM_CONFIRM_MS)
                 .unwrap_or(false);
             if is_double {
                 c.phantom_pwr.is_on = !c.phantom_pwr.is_on;

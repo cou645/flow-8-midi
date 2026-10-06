@@ -16,6 +16,8 @@ use crate::service::ble::{BleConnection, BleStatus};
 use crate::service::sysex_calibration::CalibrationState;
 
 pub const SNAPSHOT_COUNT: usize = 15;
+/// 48V needs a second click within this window (was 500 ms — too tight for touch/stylus).
+pub const PHANTOM_CONFIRM_MS: u128 = 3000;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum SyncInterval {
