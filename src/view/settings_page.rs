@@ -22,11 +22,14 @@ pub fn view_settings(controller: &FLOW8Controller) -> Element<'_, InterfaceMessa
     let log_section = build_log_section(controller);
 
     let about_section = build_about_section();
+    let whats_new_section = build_whats_new_section();
 
     let mut content = column![
         title,
         Space::new().height(12),
         about_section,
+        Space::new().height(16),
+        whats_new_section,
         Space::new().height(16),
         appearance_section,
         Space::new().height(16),
@@ -260,6 +263,31 @@ fn build_hex_viewer(dump: &[u8]) -> Element<'_, InterfaceMessage> {
     .into()
 }
 
+const WHATS_NEW: &[&str] = &[
+    "Routing tab — mixer settings that were only reachable from the phone app, read from the mixer on connect:",
+    "    • USB output: Recording / Streaming",
+    "    • Phones: source (Main / Mon 1/2) and Pre / Post",
+    "    • Monitor 1/2: Pre / Post and stereo link",
+    "    • BT/USB play: to main mix / phones only",
+    "    • From PC (USB): to channel / Mon out 1/2",
+    "    • FX1 / FX2 returns: to Main, Mon 1, Mon 2",
+    "    • Preferences: foot switch mode, -10 dBV Main / Monitor out pads, mixer app link",
+    "PHONES level readout in the top bar (follows the hardware knob)",
+    "Protocol research: settings get/set, FX routing and app tap-tempo packets decoded; notes in docs/",
+    "Developer tools: BLE pass-through logger, Android btsnoop decoder, SysEx dump diff watcher (tools/)",
+];
+
+fn build_whats_new_section() -> Element<'static, InterfaceMessage> {
+    let mut list = column![text("What's new in this version").size(14), Space::new().height(8)].spacing(3);
+    for line in WHATS_NEW {
+        list = list.push(text(*line).size(11));
+    }
+    container(list.padding([12, 14]).width(Fill))
+        .style(container::rounded_box)
+        .width(Fill)
+        .into()
+}
+
 fn build_about_section() -> Element<'static, InterfaceMessage> {
     let header = text("About").size(14);
 
@@ -274,17 +302,25 @@ fn build_about_section() -> Element<'static, InterfaceMessage> {
     )
     .size(11);
 
-    let author = text("Author: Abel Rocha Espinosa").size(11);
+    let author = text("Original author: Abel Rocha Espinosa").size(11);
     let license = text("License: GNU GPLv3").size(11);
-    let repo_row = row![
-        text("Repository:").size(11),
-        Space::new().width(4),
-        button(text("github.com/abelroes/flow-8-midi").size(11))
-            .on_press(InterfaceMessage::OpenRepository)
-            .padding([2, 6])
-            .style(button::text),
-    ]
-    .align_y(Center);
+    let link_row = |label, url, msg| {
+        row![
+            text(label).size(11),
+            Space::new().width(4),
+            button(text(url).size(11))
+                .on_press(msg)
+                .padding([2, 6])
+                .style(button::text),
+        ]
+        .align_y(Center)
+    };
+    let repo_row = link_row("Repository:", "github.com/cou645/flow-8-midi", InterfaceMessage::OpenRepository);
+    let origin_row = link_row(
+        "Original project:",
+        "github.com/abelroes/flow-8-midi",
+        InterfaceMessage::OpenOriginalRepository,
+    );
 
     let donate_btn = button(text("Buy me a beer!").size(13).center())
         .on_press(InterfaceMessage::OpenDonation)
@@ -318,6 +354,7 @@ fn build_about_section() -> Element<'static, InterfaceMessage> {
             author,
             license,
             repo_row,
+            origin_row,
             Space::new().height(8),
             donate_row,
         ]

@@ -636,10 +636,13 @@ fn update_interface(controller: &mut FLOW8Controller, message: InterfaceMessage)
             open_url("https://github.com/abelroes/flow-8-midi/blob/main/docs/MANUAL.md");
         }
         InterfaceMessage::OpenRepository => {
+            open_url("https://github.com/cou645/flow-8-midi");
+        }
+        InterfaceMessage::OpenOriginalRepository => {
             open_url("https://github.com/abelroes/flow-8-midi");
         }
         InterfaceMessage::OpenDonation => {
-            open_url("https://buymeacoffee.com/abelroes");
+            open_url("https://buymeacoffee.com/stemsee");
         }
         InterfaceMessage::CopyDebugLog => {
             let export = logger::export_log();

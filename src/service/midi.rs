@@ -75,7 +75,7 @@ pub fn list_midi_output_devices() -> Vec<MidiDeviceInfo> {
         })
         .collect();
 
-    devices.sort_by(|a, b| b.is_flow8.cmp(&a.is_flow8));
+    devices.sort_by_key(|d| std::cmp::Reverse(d.is_flow8));
     devices
 }
 

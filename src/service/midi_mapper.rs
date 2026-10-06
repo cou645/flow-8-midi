@@ -25,6 +25,7 @@ pub fn match_midi_command(
         | InterfaceMessage::ThemeChanged(_)
         | InterfaceMessage::OpenManual
         | InterfaceMessage::OpenRepository
+        | InterfaceMessage::OpenOriginalRepository
         | InterfaceMessage::OpenDonation
         | InterfaceMessage::CopyDebugLog
         | InterfaceMessage::SaveDebugLog

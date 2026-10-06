@@ -14,7 +14,22 @@ Made with 🦀 [Rust](https://www.rust-lang.org/), 🧊 [iced](https://iced.rs/)
 
 ## About
 
-* **Original Repository**: [github.com/abelroes/flow-8-midi](https://github.com/abelroes/flow-8-midi)
+* **Repository**: [github.com/cou645/flow-8-midi](https://github.com/cou645/flow-8-midi)
+* **Original Repository**: [github.com/abelroes/flow-8-midi](https://github.com/abelroes/flow-8-midi) by Abel Rocha Espinosa
+
+## What's new in this fork
+
+* **Routing tab**: mixer settings that were only reachable from the FLOW phone app, read from the mixer when Bluetooth connects:
+  * USB output: Recording / Streaming
+  * Phones: source (Main / Mon 1/2) and Pre / Post
+  * Monitor 1/2: Pre / Post and stereo link
+  * BT/USB play: to main mix / phones only
+  * From PC (USB): to channel / Mon out 1/2
+  * FX1 / FX2 returns: to Main, Mon 1, Mon 2
+  * Preferences: foot switch mode, −10 dBV Main / Monitor out pads, mixer app link
+* **PHONES level readout** in the top bar, following the hardware knob (read-only — no remote command for it is known).
+* **Protocol research** ([notes](./docs/flow8-midi-implementation.md)): BLE settings get/set (`0x25`/`0x26`), FX return routing (`0x11`), app tap tempo (`0x40`); warnings about commands that change many levels at once.
+* **Developer tools** (`tools/`, Linux/BlueZ): BLE pass-through logger, Android btsnoop HCI log decoder, SysEx dump diff watcher.
 
 ## Download
 
@@ -44,7 +59,7 @@ Pre-built binaries for **Linux** (x86\_64), **Windows** (x86\_64), and **macOS**
 
 If you find this useful, consider [buying me a beer](https://www.buymeacoffee.com/stemsee) — it keeps the project alive!
 
-<a href="https://www.buymeacoffee.com/abelroes" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/default-orange.png" alt="Buy Me A Coffee" height="41" width="174"></a>
+<a href="https://www.buymeacoffee.com/stemsee" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/default-orange.png" alt="Buy Me A Coffee" height="41" width="174"></a>
 
 ## Documentation
 

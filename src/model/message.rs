@@ -49,6 +49,7 @@ pub enum InterfaceMessage {
     SyncIntervalChanged(SyncInterval),
     OpenManual,
     OpenRepository,
+    OpenOriginalRepository,
     OpenDonation,
     CopyDebugLog,
     SaveDebugLog,
