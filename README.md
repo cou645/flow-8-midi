@@ -33,7 +33,7 @@ Made with 🦀 [Rust](https://www.rust-lang.org/), 🧊 [iced](https://iced.rs/)
 
 ## Download
 
-Pre-built binaries for **Linux** (x86\_64), **Windows** (x86\_64), and **macOS** (Apple Silicon) are available on the [Releases page](https://github.com/abelroes/flow-8-midi/releases).
+Pre-built binaries for **Linux** (x86\_64), **Windows** (x86\_64), and **macOS** (Apple Silicon) are available on the [Releases page](https://github.com/cou645/flow-8-midi/releases).
 
 ## Features
 
@@ -116,8 +116,8 @@ The binary is output to `target/<target>/release/`.
 Push a version tag to trigger automated builds for all platforms via GitHub Actions:
 
 ```bash
-git tag v1.1.0
-git push origin v1.1.0
+git tag v2.0.0
+git push origin v2.0.0
 ```
 
 This creates a GitHub Release with binaries for Linux, Windows, and macOS attached automatically.
