@@ -806,7 +806,7 @@ coincided with corrupted dumps; `06 01 00 0f` is the Ch 1 fader.
 | 6, 7 | Ch 5/6 L, R | strip order (steady line-input noise floor) |
 | 8, 9 | Ch 7/8 L, R | strip order |
 | 10, 11 | USB/BT L, R | confirmed (PC playback) |
-| 12, 13 | Main L, R? | stayed 0 in all tests — Main meter not found yet |
+| 12, 13 | Main L, R | confirmed (Ch 1 mic with its fader up); read 0 earlier only because little signal reached Main |
 
 Implemented in the app (`model::routing::parse_meters`, `meter_slots`).
 
@@ -935,7 +935,7 @@ Implemented in the app (`model::routing::parse_meters`, `meter_slots`).
 * \[ ] **Map all parameter IDs for Type 0x06**: We know 0x0f = Level. What are EQ, Pan, Gain, Sends, Mute, Solo, Compressor, etc.?
 * \[ ] **Decode 0x38 BLE state dump structure**: Full byte mapping of the 4-chunk dump to individual mixer parameters
 * \[ ] **Decode 0x21 variable bytes**: What do the variable bytes represent? Viewport? Subscription filter?
-* \[x] ~~Map 0x22 metering bytes to specific channels~~: see §3.5c (Main meter still unknown)
+* \[x] ~~Map 0x22 metering bytes to specific channels~~: see §3.5c
 * \[ ] **Test EQ/FX/Send changes via BLE**: Do they use 0x06 with different parameter IDs, or different packet types?
 * \[ ] **Investigate Windows BLE subscribe failure**: HRESULT 0x80650003 prevents reading snapshot names on some Windows systems. May be a btleplug or OS-level issue.
 

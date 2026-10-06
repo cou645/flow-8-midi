@@ -36,7 +36,7 @@ pub fn view_mixer(controller: &FLOW8Controller) -> Element<'_, InterfaceMessage>
         .buses
         .iter()
         .filter(|b| b.bus_type != BusType::Fx)
-        .map(|b| build_bus_strip(b, BUS_FADER_HEIGHT))
+        .map(|b| build_bus_strip(b, BUS_FADER_HEIGHT, controller.bus_meters(&b.bus_type)))
         .collect();
 
     let buses_section = container(
@@ -288,7 +288,7 @@ fn meter_bars(meters: &[u8], height: f32) -> Element<'static, InterfaceMessage> 
     .into()
 }
 
-pub fn build_bus_strip(bus: &Bus, fader_height: f32) -> Element<'_, InterfaceMessage> {
+pub fn build_bus_strip(bus: &Bus, fader_height: f32, meters: Vec<u8>) -> Element<'_, InterfaceMessage> {
     let mut col = Column::new()
         .width(Fill)
         .align_x(Center)
@@ -303,9 +303,13 @@ pub fn build_bus_strip(bus: &Bus, fader_height: f32) -> Element<'_, InterfaceMes
     col = col.push(
         column![
             sync_label("Level", 12.0, bus.bus_strip.level_synced),
-            v_slider(1..=127, bus.bus_strip.level, fader_height, move |v| {
-                InterfaceMessage::BusLevel(bus_idx, bus_id, v)
-            }, format_level(bus.bus_strip.level)),
+            row![
+                v_slider(1..=127, bus.bus_strip.level, fader_height, move |v| {
+                    InterfaceMessage::BusLevel(bus_idx, bus_id, v)
+                }, format_level(bus.bus_strip.level)),
+                meter_bars(&meters, fader_height),
+            ]
+            .spacing(3),
         ]
         .align_x(Center)
         .spacing(4),

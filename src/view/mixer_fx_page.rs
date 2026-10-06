@@ -42,7 +42,7 @@ pub fn view_mixer_fx(controller: &FLOW8Controller) -> Element<'_, InterfaceMessa
         .buses
         .iter()
         .filter(|b| b.bus_type != BusType::Fx)
-        .map(|b| build_bus_strip(b, COMPACT_BUS_FADER_HEIGHT))
+        .map(|b| build_bus_strip(b, COMPACT_BUS_FADER_HEIGHT, controller.bus_meters(&b.bus_type)))
         .collect();
 
     let buses_section = container(

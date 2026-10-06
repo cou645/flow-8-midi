@@ -61,6 +61,9 @@ pub fn meter_slots(channel_id: u8) -> &'static [usize] {
     }
 }
 
+/// Main bus L/R meter slots (0x22 bytes 12–13; confirmed with Ch 1 mic routed to Main).
+pub const MAIN_METER_SLOTS: [usize; 2] = [10, 11];
+
 /// PHONES level: `06 01 09 09 VV` (same packet the mixer sends when the knob turns).
 pub fn phones_packet(value: u8) -> Vec<u8> {
     with_checksum(&[0x06, 0x01, 0x09, 0x09, value])

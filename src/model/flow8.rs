@@ -126,11 +126,20 @@ const BUS_RANGE: RangeInclusive<u8> = 7..=11;
 impl FLOW8Controller {
     /// Meter levels for one input strip; zeros once the stream has been quiet for 2 s.
     pub fn channel_meters(&self, channel_id: u8) -> Vec<u8> {
+        self.meter_values(crate::model::routing::meter_slots(channel_id))
+    }
+
+    /// Main bus L/R meters; other buses have none in the stream.
+    pub fn bus_meters(&self, bus_type: &BusType) -> Vec<u8> {
+        match bus_type {
+            BusType::Main => self.meter_values(&crate::model::routing::MAIN_METER_SLOTS),
+            _ => Vec::new(),
+        }
+    }
+
+    fn meter_values(&self, slots: &[usize]) -> Vec<u8> {
         let live = self.meters_at.is_some_and(|t| t.elapsed().as_secs() < 2);
-        crate::model::routing::meter_slots(channel_id)
-            .iter()
-            .map(|&i| if live { self.meters[i] } else { 0 })
-            .collect()
+        slots.iter().map(|&i| if live { self.meters[i] } else { 0 }).collect()
     }
 
     pub fn mark_all_synced(&mut self) {
