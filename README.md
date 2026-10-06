@@ -14,7 +14,7 @@ Made with 🦀 [Rust](https://www.rust-lang.org/), 🧊 [iced](https://iced.rs/)
 
 ## About
 
-* **Repository**: [github.com/abelroes/flow-8-midi](https://github.com/abelroes/flow-8-midi)
+* **Original Repository**: [github.com/abelroes/flow-8-midi](https://github.com/abelroes/flow-8-midi)
 
 ## Download
 
@@ -42,7 +42,7 @@ Pre-built binaries for **Linux** (x86\_64), **Windows** (x86\_64), and **macOS**
 
 ## 🍺 Support the Project
 
-If you find this useful, consider [buying me a beer](https://www.buymeacoffee.com/abelroes) — it keeps the project alive!
+If you find this useful, consider [buying me a beer](https://www.buymeacoffee.com/stemsee) — it keeps the project alive!
 
 <a href="https://www.buymeacoffee.com/abelroes" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/default-orange.png" alt="Buy Me A Coffee" height="41" width="174"></a>
 
