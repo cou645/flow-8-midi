@@ -291,7 +291,8 @@ pub fn bus_strips_with_phones(controller: &FLOW8Controller, fader_height: f32) -
 fn build_phones_strip(value: u8, fader_height: f32) -> Element<'static, InterfaceMessage> {
     let db = crate::model::routing::phones_value_to_db(value);
     let label = if db <= -144.0 { "OFF".to_string() } else { format!("{:+.1} dB", db) };
-    Column::new()
+    // Same frame, sizes and slots as build_bus_strip so it reads as one of them.
+    let col = Column::new()
         .width(Fill)
         .align_x(Center)
         .spacing(6)
@@ -299,7 +300,7 @@ fn build_phones_strip(value: u8, fader_height: f32) -> Element<'static, Interfac
         .push(text("Phones").size(14))
         .push(
             column![
-                text("Level").size(12),
+                sync_label("Level", 12.0, true),
                 tooltip(
                     vertical_slider(0..=255u8, value, InterfaceMessage::PhonesLevel)
                         .on_release(InterfaceMessage::PhonesRelease)
@@ -314,9 +315,23 @@ fn build_phones_strip(value: u8, fader_height: f32) -> Element<'static, Interfac
             .align_x(Center)
             .spacing(4),
         )
-        .push(text(label).size(11))
+        .push(
+            container(text(label).size(12))
+                .height(Length::Fixed(H_SLIDER_SLOT_HEIGHT))
+                .width(Fill)
+                .align_x(Center)
+                .align_y(Center),
+        );
+
+    container(col)
+        .style(container::rounded_box)
+        .width(Fill)
+        .padding(2)
         .into()
 }
+
+/// Meter bar colour: bright light green (#7CFF8A).
+const METER_GREEN: iced::Color = iced::Color::from_rgb(0x7C as f32 / 255.0, 1.0, 0x8A as f32 / 255.0);
 
 /// Live input meter(s) beside a fader: raw 0..255 from the mixer's 0x22 stream.
 fn meter_bars(meters: &[u8], height: f32) -> Element<'static, InterfaceMessage> {
@@ -325,7 +340,12 @@ fn meter_bars(meters: &[u8], height: f32) -> Element<'static, InterfaceMessage> 
             .vertical()
             .length(height)
             .girth(8)
-            .style(progress_bar::success)
+            .style(|theme| progress_bar::Style {
+                // much lighter, brighter green than the theme's success
+                // colour, so levels are easy to read at a glance
+                bar: iced::Background::Color(METER_GREEN),
+                ..progress_bar::success(theme)
+            })
             .into()
     }))
     .spacing(1)
