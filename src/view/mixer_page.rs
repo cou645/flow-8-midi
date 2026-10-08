@@ -10,7 +10,7 @@ use crate::view::widgets::{
 use iced::{
     widget::{
         button, column, container, progress_bar, row, text, tooltip, tooltip::Position,
-        Column, Space,
+        vertical_slider, Column, Space,
     },
     Center, Element, Fill, Length,
 };
@@ -32,19 +32,15 @@ pub fn view_mixer(controller: &FLOW8Controller) -> Element<'_, InterfaceMessage>
     )
     .width(Length::FillPortion(7));
 
-    let bus_strips: Vec<Element<InterfaceMessage>> = controller
-        .buses
-        .iter()
-        .filter(|b| b.bus_type != BusType::Fx)
-        .map(|b| build_bus_strip(b, BUS_FADER_HEIGHT, controller.bus_meters(&b.bus_type)))
-        .collect();
+    let bus_strips = bus_strips_with_phones(controller, BUS_FADER_HEIGHT);
+    let portion = bus_strips.len() as u16;
 
     let buses_section = container(
         iced::widget::Row::with_children(bus_strips)
             .spacing(3)
             .width(Fill),
     )
-    .width(Length::FillPortion(3));
+    .width(Length::FillPortion(portion));
 
     row![channels_section, Space::new().width(6), buses_section]
         .width(Fill)
@@ -274,13 +270,61 @@ fn add_mute_solo<'a>(
     )
 }
 
+/// Main, Mon 1, Mon 2 strips with the headphone level as its own vertical
+/// strip right after Main (it used to be a small slider in the top bar).
+/// Shared by the Mixer and Mixer+ pages.
+pub fn bus_strips_with_phones(controller: &FLOW8Controller, fader_height: f32) -> Vec<Element<'_, InterfaceMessage>> {
+    let mut strips = Vec::new();
+    for b in controller.buses.iter().filter(|b| b.bus_type != BusType::Fx) {
+        strips.push(build_bus_strip(b, fader_height, controller.bus_meters(&b.bus_type)));
+        if b.bus_type == BusType::Main {
+            if let Some(v) = controller.phones_value {
+                strips.push(build_phones_strip(v, fader_height));
+            }
+        }
+    }
+    strips
+}
+
+/// The headphone level (0..255, follows the hardware knob). Sent to the
+/// mixer on release, like before.
+fn build_phones_strip(value: u8, fader_height: f32) -> Element<'static, InterfaceMessage> {
+    let db = crate::model::routing::phones_value_to_db(value);
+    let label = if db <= -144.0 { "OFF".to_string() } else { format!("{:+.1} dB", db) };
+    Column::new()
+        .width(Fill)
+        .align_x(Center)
+        .spacing(6)
+        .padding([10, 6])
+        .push(text("Phones").size(14))
+        .push(
+            column![
+                text("Level").size(12),
+                tooltip(
+                    vertical_slider(0..=255u8, value, InterfaceMessage::PhonesLevel)
+                        .on_release(InterfaceMessage::PhonesRelease)
+                        .height(fader_height),
+                    container(text(label.clone()).size(10))
+                        .padding(4)
+                        .style(container::rounded_box),
+                    Position::Right,
+                )
+                .gap(4),
+            ]
+            .align_x(Center)
+            .spacing(4),
+        )
+        .push(text(label).size(11))
+        .into()
+}
+
 /// Live input meter(s) beside a fader: raw 0..255 from the mixer's 0x22 stream.
 fn meter_bars(meters: &[u8], height: f32) -> Element<'static, InterfaceMessage> {
     iced::widget::Row::with_children(meters.iter().map(|&m| {
         progress_bar(0.0..=255.0, m as f32)
             .vertical()
             .length(height)
-            .girth(4)
+            .girth(8)
             .style(progress_bar::success)
             .into()
     }))

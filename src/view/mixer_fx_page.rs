@@ -4,7 +4,7 @@ use crate::model::{
     message::InterfaceMessage,
 };
 use crate::view::{
-    mixer_page::{build_bus_strip, build_channel_strip},
+    mixer_page::{build_channel_strip, bus_strips_with_phones},
     widgets::{format_level, format_percent, format_send, h_slider, sync_dot, sync_label, v_slider, UNSYNCED_COLOR},
 };
 use iced::{
@@ -38,19 +38,15 @@ pub fn view_mixer_fx(controller: &FLOW8Controller) -> Element<'_, InterfaceMessa
     )
     .width(Length::FillPortion(7));
 
-    let bus_strips: Vec<Element<InterfaceMessage>> = controller
-        .buses
-        .iter()
-        .filter(|b| b.bus_type != BusType::Fx)
-        .map(|b| build_bus_strip(b, COMPACT_BUS_FADER_HEIGHT, controller.bus_meters(&b.bus_type)))
-        .collect();
+    let bus_strips = bus_strips_with_phones(controller, COMPACT_BUS_FADER_HEIGHT);
+    let portion = bus_strips.len() as u16;
 
     let buses_section = container(
         iced::widget::Row::with_children(bus_strips)
             .spacing(3)
             .width(Fill),
     )
-    .width(Length::FillPortion(3));
+    .width(Length::FillPortion(portion));
 
     let mixer_row = row![channels_section, Space::new().width(6), buses_section]
         .width(Fill)

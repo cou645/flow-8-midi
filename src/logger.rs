@@ -6,6 +6,33 @@ use std::sync::{Mutex, OnceLock};
 
 const LOG_FILENAME: &str = "flow8-midi.log";
 const RING_BUFFER_CAPACITY: usize = 2000;
+/// The log file rolls over to .old.log past this size.
+const MAX_LOG_BYTES: u64 = 5 * 1024 * 1024;
+
+/// DEBUG lines (one per SysEx value, BLE scan details) go to the in-app
+/// buffer only -- Export Log still has them -- unless FLOW8_DEBUG=1, which
+/// also writes them to the file and stderr. Writing them always grew the
+/// log by ~330 MB a day while the mixer was connected.
+fn debug_to_file() -> bool {
+    static ON: OnceLock<bool> = OnceLock::new();
+    *ON.get_or_init(|| std::env::var("FLOW8_DEBUG").map_or(false, |v| v == "1"))
+}
+
+/// Per-user log folder, never next to the executable (which may be
+/// /usr/local/bin or Program Files).
+fn log_dir() -> PathBuf {
+    let home = std::env::var_os("HOME").map(PathBuf::from);
+    let dir = if cfg!(windows) {
+        std::env::var_os("LOCALAPPDATA").map(PathBuf::from)
+    } else if cfg!(target_os = "macos") {
+        home.map(|h| h.join("Library").join("Logs"))
+    } else {
+        std::env::var_os("XDG_STATE_HOME")
+            .map(PathBuf::from)
+            .or_else(|| home.map(|h| h.join(".local").join("state")))
+    };
+    dir.unwrap_or_else(std::env::temp_dir).join("flow-8-midi")
+}
 
 static LOG_PATH: OnceLock<PathBuf> = OnceLock::new();
 static LOG_BUFFER: OnceLock<Mutex<VecDeque<LogEntry>>> = OnceLock::new();
@@ -64,10 +91,9 @@ pub fn init() {
         .set(Mutex::new(VecDeque::with_capacity(RING_BUFFER_CAPACITY)))
         .ok();
 
-    let path = std::env::current_exe()
-        .ok()
-        .and_then(|p| p.parent().map(|d| d.join(LOG_FILENAME)))
-        .unwrap_or_else(|| PathBuf::from(LOG_FILENAME));
+    let dir = log_dir();
+    let _ = std::fs::create_dir_all(&dir);
+    let path = dir.join(LOG_FILENAME);
 
     let header = format!(
         "=== FLOW 8 MIDI Controller v{} ===\n{}",
@@ -124,10 +150,18 @@ pub fn log_with_level(level: LogLevel, message: &str) {
         message: message.to_string(),
     };
 
+    if matches!(level, LogLevel::Debug) && !debug_to_file() {
+        push_to_buffer(entry);
+        return;
+    }
+
     eprintln!("{}", entry);
     push_to_buffer(entry);
 
     if let Some(path) = LOG_PATH.get() {
+        if std::fs::metadata(path).map_or(false, |m| m.len() > MAX_LOG_BYTES) {
+            let _ = std::fs::rename(path, path.with_extension("old.log"));
+        }
         if let Ok(mut file) = OpenOptions::new().append(true).create(true).open(path) {
             let _ = writeln!(file, "[{}] [{}] {}", ts, level, message);
         }

@@ -272,7 +272,7 @@ const WHATS_NEW: &[&str] = &[
     "    • From PC (USB): to channel / Mon out 1/2",
     "    • FX1 / FX2 returns: to Main, Mon 1, Mon 2",
     "    • Preferences: foot switch mode, -10 dBV Main / Monitor out pads, mixer app link",
-    "PHONES level slider in the top bar (sets the headphone level; follows the hardware knob)",
+    "PHONES level: a vertical slider beside Main on the Mixer and Mixer+ pages (follows the hardware knob)",
     "Live meters on every input strip and on Main (Mixer and Mixer+ pages)",
     "Protocol research: settings get/set, FX routing and app tap-tempo packets decoded; notes in docs/",
     "Developer tools: BLE pass-through logger, Android btsnoop decoder, SysEx dump diff watcher (tools/)",
