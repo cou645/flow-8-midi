@@ -60,7 +60,7 @@ If you find this useful, consider [buying me a beer](https://www.buymeacoffee.co
 ## Disclaimers
 
 * This application is not official. Any damage (to the unit or any peripherals), misuse or act that avoids warranty is not our responsibility. Use it at your own risk.
-* When connected via Bluetooth, the app reads the mixer's full state every second by default (adjustable in Settings), so fader and knob moves on the hardware show up within about a second. (The mixer can also push instant notifications for hardware moves; the app doesn't use them for faders yet.)
+* When connected via Bluetooth, the app reads the mixer's full state every 5 seconds by default (adjustable in Settings), so fader and knob moves on the hardware show up within a few seconds. Each read briefly shows a SysEx notice on the mixer screen, which is why 1 s is not the default. (The mixer can also push instant notifications for hardware moves; the app doesn't use them for faders yet.)
 * On Windows, fetching snapshot names via BLE may fail due to a platform-level BLE subscribe limitation (`"The attribute cannot be written."`). Snapshots still load correctly — only the names are unavailable, so all slots will appear unnamed.
 * Current and future implementations are limited by the FLOW 8 MIDI Implementation (Behringer's FLOW 8 Quick Start Guide).
 * Later, I found [another solution](https://hexler.net/touchosc) for custom control of this unit. Give it a try and use what is best for you!

@@ -181,9 +181,15 @@ const BUS_LEVELS: [FloatParam; 5] = [
     FloatParam { msb_off: 0x04C7, data_offs: [0x04C8, 0x04C9, 0x04CA, 0x04CB], bit_indices: [0, 1, 2, 3] },
     FloatParam { msb_off: 0x0338, data_offs: [0x033B, 0x033C, 0x033D, 0x033E], bit_indices: [2, 3, 4, 5] },
     FloatParam { msb_off: 0x0338, data_offs: [0x0336, 0x0337, 0x033D, 0x033E], bit_indices: [3, 2, 4, 5] },
-    FloatParam { msb_off: 0x03D2, data_offs: [0x03D0, 0x03D1, 0x03D3, 0x03D4], bit_indices: [3, 2, 0, 1] },
-    FloatParam { msb_off: 0x0418, data_offs: [0x041B, 0x041C, 0x041D, 0x041E], bit_indices: [2, 3, 4, 5] },
+    // FX1/FX2 re-found 2026-10-16 by diffing dumps while moving the app's FX bus faders
+    // (old offsets read a byte that never changed, so the sliders snapped back).
+    FloatParam { msb_off: 0x03D9, data_offs: [0x03DA, 0x03DB, 0x03DC, 0x03DD], bit_indices: [0, 1, 2, 3] },
+    FloatParam { msb_off: 0x0426, data_offs: [0x0429, 0x042A, 0x042B, 0x042C], bit_indices: [2, 3, 4, 5] },
 ];
+
+/// Mon2 level straddles two 7-bit groups, so it can't be one FloatParam: (data, msb, bit) per byte.
+/// Found 2026-10-16 by diffing dumps; BUS_LEVELS[2] shared bytes with Mon1, so the two sliders moved together.
+const MON2_LEVEL: [(usize, usize, u8); 4] = [(0x038A, 0x0385, 4), (0x038B, 0x0385, 5), (0x038D, 0x038C, 0), (0x038E, 0x038C, 1)];
 
 /// Phones level (dB). Found by diffing dumps while turning the PHONES knob, 2026-10-06.
 const PHONES_LEVEL: FloatParam =
@@ -384,7 +390,10 @@ pub fn apply_dump_to_controller(dump: &SysExDump, controller: &mut FLOW8Controll
     synced += apply_channel_compressors(dump, controller);
     synced += apply_channel_low_cuts(dump, controller);
     synced += apply_channel_eq(dump, controller);
-    synced += apply_channel_sends(dump, controller);
+    // ponytail: one shared hold-off for all sends; per-slider timestamps if one drag blocks another's sync.
+    if !controller.sends_touched.is_some_and(|t| t.elapsed().as_secs() < 2) {
+        synced += apply_channel_sends(dump, controller);
+    }
     synced += apply_channel_mutes(dump, controller);
     synced += apply_channel_solos(dump, controller);
     synced += apply_channel_phantoms(dump, controller);
@@ -490,6 +499,15 @@ fn decode_float(data: &[u8], param: &FloatParam) -> Option<f32> {
         return None;
     }
     Some(value)
+}
+
+fn decode_split(data: &[u8], parts: &[(usize, usize, u8); 4]) -> Option<f32> {
+    let mut bytes = [0u8; 4];
+    for (b, &(off, msb, bit)) in bytes.iter_mut().zip(parts) {
+        *b = data.get(off)? | if data.get(msb)? & (1 << bit) != 0 { 0x80 } else { 0 };
+    }
+    let value = f32::from_le_bytes(bytes);
+    value.is_finite().then_some(value)
 }
 
 fn db_to_cc(db: f32) -> u8 {
@@ -752,7 +770,8 @@ fn apply_bus_levels(dump: &SysExDump, controller: &mut FLOW8Controller) -> usize
     let bus_names = ["Main", "Mon1", "Mon2", "FX1", "FX2"];
     let mut count = 0;
     for (i, param) in BUS_LEVELS.iter().enumerate() {
-        if let Some(db) = decode_float(data, param) {
+        let db = if i == 2 { decode_split(data, &MON2_LEVEL) } else { decode_float(data, param) };
+        if let Some(db) = db {
             let cc = db_to_cc(db);
             controller.buses[i].bus_strip.level = cc;
             controller.buses[i].bus_strip.level_synced = true;
@@ -948,4 +967,28 @@ pub fn format_hex_dump(data: &[u8]) -> String {
         out.push_str(&format!("{:04X}: {:48} | {}\n", i * 16, hex.join(" "), ascii));
     }
     out
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn fx_bus_levels_from_real_dump() {
+        // Captured with FX1 fader at max (+10 dB) and FX2 at min (-69.4 dB).
+        let d = include_bytes!("../../tests/fixtures/fx-levels-fx1-max-fx2-min.bin");
+        assert_eq!(decode_float(d, &BUS_LEVELS[3]), Some(10.0));
+        let fx2 = decode_float(d, &BUS_LEVELS[4]).unwrap();
+        assert!((fx2 + 69.4).abs() < 0.1, "{fx2}");
+    }
+
+    #[test]
+    fn mon_bus_levels_are_independent() {
+        // Captured with Mon1 sent CC 66 (-28.7 dB) and Mon2 CC 67 (-28.1 dB).
+        let d = include_bytes!("../../tests/fixtures/bus-levels-mon1-mon2.bin");
+        let mon1 = decode_float(d, &BUS_LEVELS[1]).unwrap();
+        let mon2 = decode_split(d, &MON2_LEVEL).unwrap();
+        assert!((mon1 + 28.4).abs() < 0.2, "{mon1}");
+        assert!((mon2 + 27.8).abs() < 0.2, "{mon2}");
+    }
 }

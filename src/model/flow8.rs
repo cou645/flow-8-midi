@@ -107,6 +107,8 @@ pub struct FLOW8Controller {
     /// PHONES slider position (0..=255); follows the dump unless dragged in the last 2 s.
     pub phones_value: Option<u8>,
     pub phones_touched: Option<Instant>,
+    /// Last send-slider move; dumps leave sends alone for 2 s after it.
+    pub sends_touched: Option<Instant>,
     /// Live input meters from the BLE 0x22 stream (see routing::meter_slots).
     pub meters: [u8; 12],
     pub meters_at: Option<Instant>,
@@ -226,7 +228,8 @@ impl FLOW8Controller {
             tick_counter: 0,
             ble_last_click: None,
             sync_last_click: None,
-            sync_interval: SyncInterval::Sec1,
+            // 1 s keeps a SysEx notice on the mixer screen and blocks its menu.
+            sync_interval: SyncInterval::Secs5,
             last_sync_time: None,
             snapshot_names: vec![None; SNAPSHOT_COUNT],
             snapshot_names_receiver: None,
@@ -235,6 +238,7 @@ impl FLOW8Controller {
             phones_db: None,
             phones_value: None,
             phones_touched: None,
+            sends_touched: None,
             meters: [0; 12],
             meters_at: None,
             meters_receiver: None,

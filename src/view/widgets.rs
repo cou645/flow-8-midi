@@ -154,3 +154,20 @@ pub fn format_limiter(cc: u8) -> String {
         format!("{:.1} dB", db)
     }
 }
+
+/// MAIN / MON 1 / MON 2 / FX 1 / FX 2 layer buttons, mirroring the mixer's own.
+pub fn layer_bar(controller: &crate::model::flow8::FLOW8Controller) -> Element<'static, InterfaceMessage> {
+    use crate::model::routing::{LAYERS, LAYER_KEY};
+    use iced::widget::button;
+    let current = controller.settings.get(&LAYER_KEY).copied();
+    let mut bar = row![text("Layer").size(11)].spacing(4).align_y(Center).padding([2, 10]);
+    for &(label, id) in &LAYERS {
+        bar = bar.push(
+            button(text(label).size(11))
+                .padding([3, 10])
+                .on_press(InterfaceMessage::SelectLayer(id))
+                .style(if current == Some(id) { button::primary } else { button::secondary }),
+        );
+    }
+    bar.into()
+}

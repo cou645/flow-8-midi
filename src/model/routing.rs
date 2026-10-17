@@ -108,8 +108,25 @@ pub fn fx_route_packet(fx: usize, mask: u8) -> Vec<u8> {
 }
 
 /// `25 01 id len value… chk` → (id, first value byte) for 1-byte settings.
+/// Hardware layer buttons (FX 1 / FX 2 / MON 1 / MON 2 / MAIN, exclusive): `41 01 BB`.
+/// The mixer only applies MIDI send CCs to the selected layer, so the app selects it too.
+pub const LAYERS: [(&str, u8); 5] = [("FX 1", 0x0C), ("FX 2", 0x0D), ("MON 1", 0x0A), ("MON 2", 0x0B), ("MAIN", 0x0F)];
+/// Pseudo setting id the current layer is stored under in `settings` (no real setting uses 0x41).
+pub const LAYER_KEY: u8 = 0x41;
+
+/// FX preset: `31 01 slot preset` (slot 0x0C = FX1, 0x0D = FX2; preset 0-based). The mixer sends this
+/// when its own preset changes; USB MIDI Program Change is ignored (tested 2026-10-17).
+pub fn fx_preset_packet(fx: u8, preset: u8) -> Vec<u8> {
+    with_checksum(&[0x31, 0x01, 0x0C + fx, preset])
+}
+
+pub fn layer_packet(layer: u8) -> Vec<u8> {
+    with_checksum(&[0x41, 0x01, layer])
+}
+
 pub fn parse_setting_reply(p: &[u8]) -> Option<(u8, u8)> {
     match p {
+        [0x41, 0x01, layer, ..] => Some((LAYER_KEY, *layer)),
         [0x25, 0x01, id, 0x01, value, _chk] => Some((*id, *value)),
         _ => None,
     }
@@ -124,6 +141,9 @@ mod tests {
     fn packets_match_capture() {
         assert_eq!(set_packet(0x07, 0x01), [0x25, 0x01, 0x07, 0x01, 0x01, 0x2F]);
         assert_eq!(set_packet(0xB0, 0x00), [0x25, 0x01, 0xB0, 0x01, 0x00, 0xD7]);
+        assert_eq!(layer_packet(0x0C), [0x41, 0x01, 0x0C, 0x4E]);
+        assert_eq!(fx_preset_packet(1, 0x0C), [0x31, 0x01, 0x0D, 0x0C, 0x4B]);
+        assert_eq!(parse_setting_reply(&[0x41, 0x01, 0x0D, 0x4F]), Some((LAYER_KEY, 0x0D)));
         assert_eq!(get_packet(0xB0), [0x26, 0x01, 0xB0, 0xD7]);
         assert_eq!(fx_route_packet(0, 0x03), [0x11, 0x01, 0x0C, 0x18, 0x00, 0x00, 0x03, 0x39]);
         assert_eq!(fx_route_packet(1, 0x07), [0x11, 0x01, 0x0D, 0x17, 0x00, 0x00, 0x07, 0x3D]);

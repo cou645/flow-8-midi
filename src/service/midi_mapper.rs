@@ -36,6 +36,7 @@ pub fn match_midi_command(
         | InterfaceMessage::PhonesLevel(_)
         | InterfaceMessage::PhonesRelease
         | InterfaceMessage::FxRoute(..)
+        | InterfaceMessage::SelectLayer(_)
         | InterfaceMessage::SyncIntervalChanged(_) => {}
 
         #[cfg(any(debug_assertions, feature = "dev-tools"))]

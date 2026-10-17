@@ -609,6 +609,9 @@ pub fn start_ble_notification_listener(
                     log!("[BLE] 0x38 state dump complete ({} chunks) — not yet parseable; using USB SysEx path", ble_dump_chunks);
                     ble_dump_chunks = 0;
                 }
+            } else {
+                // Unmapped hardware controls show up here (e.g. FX preset changes).
+                log!("[BLE] Unhandled notification: {:02X?}", data);
             }
         }
 

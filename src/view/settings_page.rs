@@ -264,6 +264,12 @@ fn build_hex_viewer(dump: &[u8]) -> Element<'_, InterfaceMessage> {
 }
 
 const WHATS_NEW: &[&str] = &[
+    "2.1.1:",
+    "    • Layer buttons FX 1 / FX 2 / MON 1 / MON 2 / MAIN, in sync with the mixer's own (send levels apply to the selected layer)",
+    "    • FX presets now change the mixer (sent over Bluetooth; the mixer ignores MIDI Program Change)",
+    "    • Fixed: FX 1 / FX 2 level sliders snapping back to 0; MON 1 / MON 2 sliders moving together",
+    "    • Auto-sync default 5 s (1 s kept a SysEx notice on the mixer screen)",
+    "2.1.0:",
     "Routing tab — mixer settings that were only reachable from the phone app, read from the mixer on connect:",
     "    • USB output: Recording / Streaming",
     "    • Phones: source (Main / Mon 1/2) and Pre / Post",

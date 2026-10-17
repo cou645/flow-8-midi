@@ -299,7 +299,7 @@ fn view(controller: &FLOW8Controller) -> Element<'_, InterfaceMessage> {
         Page::DeviceSelect => unreachable!(),
     };
 
-    column![nav, scrollable(page_content).height(Fill)]
+    column![nav, view::widgets::layer_bar(controller), scrollable(page_content).height(Fill)]
         .width(Fill)
         .height(Fill)
         .into()
@@ -408,21 +408,25 @@ fn update_interface(controller: &mut FLOW8Controller, message: InterfaceMessage)
             let c = &mut controller.channels[ch as usize];
             c.sends.mon1 = value;
             c.sends.mon1_synced = true;
+            controller.sends_touched = Some(std::time::Instant::now());
         }
         InterfaceMessage::SendMon2(ch, value) => {
             let c = &mut controller.channels[ch as usize];
             c.sends.mon2 = value;
             c.sends.mon2_synced = true;
+            controller.sends_touched = Some(std::time::Instant::now());
         }
         InterfaceMessage::SendFx1(ch, value) => {
             let c = &mut controller.channels[ch as usize];
             c.sends.fx1 = value;
             c.sends.fx1_synced = true;
+            controller.sends_touched = Some(std::time::Instant::now());
         }
         InterfaceMessage::SendFx2(ch, value) => {
             let c = &mut controller.channels[ch as usize];
             c.sends.fx2 = value;
             c.sends.fx2_synced = true;
+            controller.sends_touched = Some(std::time::Instant::now());
         }
 
         InterfaceMessage::BusLevel(bus_idx, _, value) => {
@@ -463,6 +467,7 @@ fn update_interface(controller: &mut FLOW8Controller, message: InterfaceMessage)
             let f = &mut controller.fx_slots[fx_id as usize];
             f.preset = value;
             f.preset_synced = true;
+            send_ble_packet(controller, &model::routing::fx_preset_packet(fx_id, value));
         }
         InterfaceMessage::FxParam1(fx_id, value) => {
             let f = &mut controller.fx_slots[fx_id as usize];
@@ -629,6 +634,11 @@ fn update_interface(controller: &mut FLOW8Controller, message: InterfaceMessage)
                 send_ble_packet(controller, &model::routing::phones_packet(v));
                 controller.phones_touched = Some(std::time::Instant::now());
             }
+        }
+        InterfaceMessage::SelectLayer(layer) => {
+            log!("[APP] Layer -> 0x{:02X}", layer);
+            send_ble_packet(controller, &model::routing::layer_packet(layer));
+            // The mixer echoes `41 01 BB`; the listener records it under LAYER_KEY.
         }
         InterfaceMessage::FxRoute(fx, mask) => {
             log!("[APP] FX{} routing mask -> {:03b}", fx + 1, mask);

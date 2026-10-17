@@ -43,6 +43,7 @@ pub enum InterfaceMessage {
     PhonesLevel(u8),
     PhonesRelease,
     FxRoute(usize, u8),
+    SelectLayer(u8),
 
     LoadSnapshot(u8),
     ResetMixer,

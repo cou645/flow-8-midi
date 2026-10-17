@@ -786,7 +786,8 @@ notification the moment a hardware control moves**, in the same format as the 0x
 | PHONES knob | `06 01 09 09 VV` | 0–255 (also accepted as a write) |
 | FX MUTE button | `08 01 0c 01 VV`, `08 01 0d 01 VV` (FX1, FX2) | 1 = muted |
 
-| MAIN / MON 1 / MON 2 / FX 1 / FX 2 buttons (layer select) | `41 01 BB` | BB = 0f / 0a / 0b / 0c / 0d |
+| MAIN / MON 1 / MON 2 / FX 1 / FX 2 buttons (layer select) | `41 01 BB` | BB = 0f / 0a / 0b / 0c / 0d. **Also accepted as a write**; MIDI send CCs only apply to the selected layer |
+| FX preset (mixer menu) | `31 01 SS PP` + `45 02 …` param blob + `11 01 SS …` | SS = 0c FX1 / 0d FX2, PP = 0-based preset. **`31` is also accepted as a write** (2026-10-17); USB MIDI Program Change for FX presets is ignored by the mixer |
 | A setting changed in the mixer's menu (e.g. SELECT press on USB mode) | `25 01 id 01 VV` | as the 0x25 settings table |
 | SELECT/ADJUST turn, MENU, TAP | nothing sent | — |
 
