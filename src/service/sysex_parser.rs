@@ -391,7 +391,7 @@ pub fn apply_dump_to_controller(dump: &SysExDump, controller: &mut FLOW8Controll
     synced += apply_channel_low_cuts(dump, controller);
     synced += apply_channel_eq(dump, controller);
     // ponytail: one shared hold-off for all sends; per-slider timestamps if one drag blocks another's sync.
-    if !controller.sends_touched.is_some_and(|t| t.elapsed().as_secs() < 2) {
+    if controller.sends_touched.is_none_or(|t| t.elapsed().as_secs() >= 2) {
         synced += apply_channel_sends(dump, controller);
     }
     synced += apply_channel_mutes(dump, controller);

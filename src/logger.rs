@@ -15,7 +15,7 @@ const MAX_LOG_BYTES: u64 = 5 * 1024 * 1024;
 /// log by ~330 MB a day while the mixer was connected.
 fn debug_to_file() -> bool {
     static ON: OnceLock<bool> = OnceLock::new();
-    *ON.get_or_init(|| std::env::var("FLOW8_DEBUG").map_or(false, |v| v == "1"))
+    *ON.get_or_init(|| std::env::var("FLOW8_DEBUG").is_ok_and(|v| v == "1"))
 }
 
 /// Per-user log folder, never next to the executable (which may be
@@ -159,7 +159,7 @@ pub fn log_with_level(level: LogLevel, message: &str) {
     push_to_buffer(entry);
 
     if let Some(path) = LOG_PATH.get() {
-        if std::fs::metadata(path).map_or(false, |m| m.len() > MAX_LOG_BYTES) {
+        if std::fs::metadata(path).is_ok_and(|m| m.len() > MAX_LOG_BYTES) {
             let _ = std::fs::rename(path, path.with_extension("old.log"));
         }
         if let Ok(mut file) = OpenOptions::new().append(true).create(true).open(path) {
